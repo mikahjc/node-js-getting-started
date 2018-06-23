@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Shipping Cost</title>
+    </head>
+    <body>
+        <% if(!valid) { %>
+        <h1>Error</h1>
+        <%= error %>
+        <% } else { %>
+        <h3>Your item will cost $<%= cost.toFixed(2) %> to ship.</h3>
+        <% } %>
+    </body>
+<html>
