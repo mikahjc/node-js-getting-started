@@ -3,20 +3,22 @@
   "version": "0.3.0",
   "description": "A sample Node.js app using Express 4",
   "engines": {
-    "node": "8.9.1"
+    "node": "*"
   },
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "node test.js"
+    "start": "node server.js",
+    "test": "node server.js"
   },
   "dependencies": {
-    "ejs": "^2.5.6",
-    "express": "^4.15.2"
+    "ejs": "*",
+    "express": "*",
+    "pg": "*",
+    "promise": "*"
   },
   "devDependencies": {
-    "request": "^2.81.0",
-    "tape": "^4.7.0"
+    "request": "*",
+    "tape": "*"
   },
   "repository": {
     "type": "git",
