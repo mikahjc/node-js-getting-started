@@ -119,7 +119,7 @@ function getTeams(owner, callback) {
 
 var app = express();
 
-app.get('/trainerTeams/', (req, res) => {
+app.get('/api/trainerTeams/', (req, res) => {
 	getTeams(1, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -128,7 +128,7 @@ app.get('/trainerTeams/', (req, res) => {
 	})
 })
 
-app.get('/pokemon/:id', (req, res) => {
+app.get('/api/pokemon/:id', (req, res) => {
 	getPokemonFromDex(req.params.id, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -137,7 +137,17 @@ app.get('/pokemon/:id', (req, res) => {
 	})
 })
 
-app.get('/pokemonAPI/:id', (req, res) => {
+app.get('/api/pokemonAPI/:id', (req, res) => {
+	getPokemonFromDexAPI(req.params.id, (err, result) => {
+		if (err) {
+			res.send(err);
+		}
+    result[0].message = "This endpoint is moving to /api/pokemon/{id}/raw";
+		res.json(result[0]);
+	})
+})
+
+app.get('/api/pokemon/:id/raw', (req, res) => {
 	getPokemonFromDexAPI(req.params.id, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -146,7 +156,7 @@ app.get('/pokemonAPI/:id', (req, res) => {
 	})
 })
 
-app.get('/teamMember/:id', function (req, res) {
+app.get('/api/teamMember/:id', function (req, res) {
 	getFriendlyPokemonFromPC(req.params.id, function(err, result) {
 		if (err) {
 			res.send(err);
@@ -155,7 +165,17 @@ app.get('/teamMember/:id', function (req, res) {
 	})
 })
 
-app.get('/teamMemberAPI/:id', function (req, res) {
+app.get('/api/teamMemberAPI/:id', function (req, res) {
+	getPokemonFromPC(req.params.id, function(err, result) {
+		if (err) {
+			res.send(err);
+		}
+    result[0].message = "This endpoint is moving to /api/teamMember/{id}/raw";
+		res.json(result[0]);
+	}) 
+})
+
+app.get('/api/teamMember/:id/raw', function (req, res) {
 	getPokemonFromPC(req.params.id, function(err, result) {
 		if (err) {
 			res.send(err);
@@ -164,7 +184,7 @@ app.get('/teamMemberAPI/:id', function (req, res) {
 	})
 })
 
-app.get('/pc/', function (req, res) {
+app.get('/api/pc/', function (req, res) {
 	getPCBox(1, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -173,7 +193,7 @@ app.get('/pc/', function (req, res) {
 	})
 })
 
-app.get('/pcAPI/', function (req, res) {
+app.get('/api/pcAPI/', function (req, res) {
 	getPCBoxAPI(1, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -182,7 +202,7 @@ app.get('/pcAPI/', function (req, res) {
 	})
 })
 
-app.get('/team/:id', function (req, res) {
+app.get('/api/team/:id', function (req, res) {
 	getTeamFromDB(req.params.id, function(err, result) {
 		if (err) {
 			res.send(err);
@@ -196,7 +216,7 @@ app.get('/team/:id', function (req, res) {
 	})
 })
 
-app.get('/move/:id', (req, res) => {
+app.get('/api/move/:id', (req, res) => {
 	getMove(req.params.id, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -205,7 +225,7 @@ app.get('/move/:id', (req, res) => {
 	})
 })
 
-app.get('/allowedMoves/:id', function (req, res) {
+app.get('/api/allowedMoves/:id', function (req, res) {
 	getAllowedMoves(req.params.id, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -214,7 +234,7 @@ app.get('/allowedMoves/:id', function (req, res) {
 	})
 })
 
-app.get('/ability/:id', (req, res) => {
+app.get('/api/ability/:id', (req, res) => {
 	getAbility(req.params.id, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -223,7 +243,7 @@ app.get('/ability/:id', (req, res) => {
 	})
 })
 
-app.get('/allowedAbilities/:id', (req, res) => {
+app.get('/api/allowedAbilities/:id', (req, res) => {
 	getAllowedAbilities(req.params.id, (err, result) => {
 		if (err) {
 			res.send(err);
@@ -232,13 +252,65 @@ app.get('/allowedAbilities/:id', (req, res) => {
 	})
 })
 
-app.get('/item/:id', (req, res) => {
+app.get('/api/item/:id', (req, res) => {
 	getItem(req.params.id, (err, result) => {
 		if (err) {
 			res.send(err);
 		}
 		res.json(result[0]);
 	})
+})
+
+app.get('/trainerTeams/', (req, res) => {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/pokemon/:id', (req, res) => {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/pokemonAPI/:id', (req, res) => {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/teamMember/:id', function (req, res) {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/teamMemberAPI/:id', function (req, res) {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/pc/', function (req, res) {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/pcAPI/', function (req, res) {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/team/:id', function (req, res) {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/move/:id', (req, res) => {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/allowedMoves/:id', function (req, res) {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/ability/:id', (req, res) => {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/allowedAbilities/:id', (req, res) => {
+  res.send("API calls have moved to the /api subdirectory.");
+})
+
+app.get('/item/:id', (req, res) => {
+  res.send("API calls have moved to the /api subdirectory.");
 })
 
 app.listen(PORT, () => console.log(`Listening on ${ PORT }`))
