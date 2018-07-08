@@ -9,7 +9,7 @@
 			<th>EVs</th>
 		</tr>
 	</thead>
-	<tr ng-repeat="member in pc">
+	<tr ng-repeat="member in pc track by $index">
 		<td class="align-middle"><img src="http://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{member.pokemon | lowercase}}.gif"></td>
 		<td class="align-middle">{{member.pokemon}}<span ng-if="member.nickname != null"><br>{{member.nickname}}</span></td>
 		<td class="align-middle">{{member.ability}}<br>{{member.nature}}<span ng-if="member.held_item != null"><br>{{member.held_item}}</span></td>

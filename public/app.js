@@ -11,7 +11,7 @@ function login() {
 }
 
 app.config(function($stateProvider, $urlRouterProvider) {
-	$urlRouterProvider.otherwise('/home');
+	$urlRouterProvider.otherwise('/');
 
 	$stateProvider
 
@@ -39,6 +39,7 @@ app.config(function($stateProvider, $urlRouterProvider) {
 		controller : function($scope, $stateParams, $http) {
 			$http.get("/api/team/" + $stateParams.id)
 			.then(function(response) {
+				
 				$scope.team = response.data;
 			})
 		}
