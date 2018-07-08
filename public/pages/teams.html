@@ -1,0 +1,4 @@
+<ul>
+	<li ng-repeat="team in teams"><a ui-sref="teams.detail({id: {{team.id}}})">{{team.team_name}}</a></li>
+</ul>
+<div ui-view></div>

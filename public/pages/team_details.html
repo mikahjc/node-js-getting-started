@@ -1,0 +1,49 @@
+<table class="table table-striped table-hover">
+	<thead class="thead-dark">
+		<tr>
+			<th>{{team.team_name}}</th>
+			<th>Name</th>
+			<th>Ability<br>Nature<br>Held Item</th>
+			<th>Moves</th>
+			<th>IVs</th>
+			<th>EVs</th>
+		</tr>
+	</thead>
+	<tr ng-repeat="member in team.members">
+		<td class="align-middle"><img src="http://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{member.pokemon | lowercase}}.gif"></td>
+		<td class="align-middle">{{member.pokemon}}<span ng-if="member.nickname != null"><br>{{member.nickname}}</span></td>
+		<td class="align-middle">{{member.ability}}<br>{{member.nature}}<span ng-if="member.held_item != null"><br>{{member.held_item}}</span></td>
+		<td class="align-middle">
+			{{member.move_1}}
+			<span ng-if="member.move_2 != null"><br>{{member.move_2}}</span>
+			<span ng-if="member.move_3 != null"><br>{{member.move_3}}</span>
+			<span ng-if="member.move_4 != null"><br>{{member.move_4}}</span>
+		</td>
+		<td class="align-middle">
+			<table>
+				<thead class="thead-dark"><tr><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
+				<tr>
+					<td class="align-middle">{{member.hp_iv}}</td>
+					<td class="align-middle">{{member.atk_iv}}</td>
+					<td class="align-middle">{{member.def_iv}}</td>
+					<td class="align-middle">{{member.spa_iv}}</td>
+					<td class="align-middle">{{member.spd_iv}}</td>
+					<td class="align-middle">{{member.spe_iv}}</td>
+				</tr>
+			</table>
+		</td>
+		<td class="align-middle">
+			<table>
+				<thead class="thead-dark"><tr><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
+				<tr>
+					<td class="align-middle">{{member.hp_ev}}</td>
+					<td class="align-middle">{{member.atk_ev}}</td>
+					<td class="align-middle">{{member.def_ev}}</td>
+					<td class="align-middle">{{member.spa_ev}}</td>
+					<td class="align-middle">{{member.spd_ev}}</td>
+					<td class="align-middle">{{member.spe_ev}}</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
