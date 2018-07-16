@@ -1,16 +1,18 @@
+<div class="panel-body">
 <table class="table table-striped table-hover">
 	<thead class="thead-dark">
 		<tr>
-			<th>{{team.team_name}}</th>
+			<th></th>
 			<th>Name</th>
-			<th>Ability<br>Nature<br>Held Item</th>
+			<th>Ability<br>Nature<br>Held&nbsp;Item</th>
 			<th>Moves</th>
 			<th>IVs</th>
 			<th>EVs</th>
+      <th></th>
 		</tr>
 	</thead>
 	<tr ng-repeat="member in team.members track by $index">
-		<td class="align-middle"><img src="https://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{member.pokemon | lowercase}}.gif"></td>
+		<td class="align-middle text-center"><img src="https://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{member.pokemon | lowercase}}.gif"></td>
 		<td class="align-middle">{{member.pokemon}}<span ng-if="member.nickname != null"><br>{{member.nickname}}</span></td>
 		<td class="align-middle">{{member.ability}}<br>{{member.nature}}<span ng-if="member.held_item != null"><br>{{member.held_item}}</span></td>
 		<td class="align-middle">
@@ -20,7 +22,7 @@
 			<span ng-if="member.move_4 != null"><br>{{member.move_4}}</span>
 		</td>
 		<td class="align-middle">
-			<table>
+			<table class="rounded">
 				<thead class="thead-dark"><tr><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
 				<tr>
 					<td class="align-middle">{{member.hp_iv}}</td>
@@ -33,7 +35,7 @@
 			</table>
 		</td>
 		<td class="align-middle">
-			<table>
+			<table class="rounded">
 				<thead class="thead-dark"><tr><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
 				<tr>
 					<td class="align-middle">{{member.hp_ev}}</td>
@@ -47,3 +49,4 @@
 		</td>
 	</tr>
 </table>
+</div>

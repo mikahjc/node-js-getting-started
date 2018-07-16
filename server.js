@@ -6,12 +6,19 @@ const { Pool } = require('pg');
 const bodyParser = require('body-parser');
 const session = require('client-sessions');
 const async = require('async');
+// sqlCredentials is a module that provides:
+// PG username
+// hostname
+// PG database name
+// PG password
+// It will not be provided in this repo.
+const sqlCreds = require('./sqlCredentials.js')
 
 const pool = new Pool({
-	user: 'www-data',
-	host: 'localhost',
-	database: 'teambuilder',
-	password: 'd$DE~jNRB4k.Ew*\'',
+	user: sqlCreds.user,
+	host: sqlCreds.host,
+	database: sqlCreds.database,
+	password: sqlCreds.password,
 	port: process.env.SQLPORT || 5432
 })
 
@@ -25,6 +32,15 @@ function doQuery(sql, params, callback) {
 
 		callback(null, result.rows);
 	})}
+
+function verifyLogin(req, res, next) {
+  if(!req.session.hasOwnProperty('userid')) {
+    res.json({succeed: false, reason: "not logged in"});
+  } else {
+    next()
+  }
+}
+
 function getPokemonFromDex(id, callback) {
 	var sql = 'SELECT pv.name, pv.number, pv.type1, pv.type2, pv.previous_evolution, pv.base_hp, pv.base_attack, pv.base_defense, pv.base_special_attack, pv.base_special_defense, pv.base_speed FROM pokemon_view pv WHERE pv.id = $1::int';
 	var params = [id];
@@ -91,6 +107,10 @@ function getTeams(owner, callback) {
 
 	doQuery(sql, params, callback);}
 
+function isLoggedIn(request) {
+  return request.session.hasOwnProperty('userid');
+}
+
 // Server Setup
 
 var app = express();
@@ -109,29 +129,21 @@ app.use(express.json())
   .set('view engine', 'ejs')
   .get('/', (req, res) => res.render('pages/index'));
 
-app.get('/api/pc/', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+app.get('/api/pc/', verifyLogin, (req, res) => {
 	getPCBox(req.session.userid, (err, result) => {
 		if (err) {
 			res.send(err);
 		}
 		res.json(result);
 	})
-}).get('/api/pc/raw', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+}).get('/api/pc/raw', verifyLogin, (req, res) => {
 	getPCBoxAPI(req.session.userid, (err, result) => {
 		if (err) {
 			res.send(err);
 		}
 		res.json(result);
 	})
-}).get('/api/team/:id', (req, res) => {
+}).get('/api/team/:id', verifyLogin, (req, res) => {
 	getTeamFromDB(req.params.id, function(err, result) {
 		if (err) {
 			res.send(err);
@@ -200,33 +212,21 @@ app.get('/api/pc/', (req, res) => {
 		}
 		res.json(result[0]);
 	})
-}).get('/api/trainerTeams/', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+}).get('/api/trainerTeams/', verifyLogin, (req, res) => {
 	getTeams(req.session.userid, (err, result) => {
 		if (err) {
 			res.send(err);
 		}
 		res.json(result);
 	})
-}).get('/api/teamMember/:id', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+}).get('/api/teamMember/:id', verifyLogin, (req, res) => {
 	getFriendlyPokemonFromPC(req.params.id, req.session.userid, function(err, result) {
 		if (err) {
 			res.send(err);
 		}
 		res.json(result[0]);
 	})
-}).get('/api/teamMember/:id/raw', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+}).get('/api/teamMember/:id/raw', verifyLogin, (req, res) => {
 	getPokemonFromPC(req.params.id, req.session.userid, function(err, result) {
 		if (err) {
 			res.send(err);
@@ -252,11 +252,7 @@ app.get('/api/pc/', (req, res) => {
 // What can be modified:
 // team
 // teamMember
-app.post('/api/team/', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+app.post('/api/team/', verifyLogin, (req, res) => {
 	var teamName = req.body.teamName;
 	var sql = "SELECT team_name FROM teams WHERE team_name = $1::text and owner = $2::int";
 	var params = [teamName, parseInt(req.session.userid)];
@@ -279,7 +275,7 @@ app.post('/api/team/', (req, res) => {
 			})
 		}
 	})
-}).post('/api/teamMember/', (req, res) => {
+}).post('/api/teamMember/', verifyLogin, (req, res) => {
 	if (!req.session.hasOwnProperty('userid')) {
 		res.json({succeed: false, reason: "not logged in"});
 		return;
@@ -337,11 +333,7 @@ app.post('/api/team/', (req, res) => {
 	})
 });
 
-app.put('/api/team/:id', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+app.put('/api/team/:id', verifyLogin, (req, res) => {
 	var sql = "UPDATE teams SET ";
 	var valid = false;
 	var variableCounter = 1;
@@ -386,11 +378,7 @@ app.put('/api/team/:id', (req, res) => {
 	} else {
 		res.json({succeed: false, reason: "no parameters provided"});
 	}
-}).put('/api/teamMember/:id', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+}).put('/api/teamMember/:id', verifyLogin, (req, res) => {
 	var sql = "UPDATE team_members SET ";
 	var valid = false;
 	var variableCounter = 1;
@@ -475,11 +463,7 @@ app.put('/api/team/:id', (req, res) => {
 	}
 });
 
-app.delete('/api/team/:id', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+app.delete('/api/team/:id', verifyLogin, (req, res) => {
 	var sql = "DELETE FROM teams WHERE id=$1::int and owner=$2::int";
 	var params = [req.params.id, req.session.userid];
 	pool.query(sql, params, (err, result) => {
@@ -493,11 +477,7 @@ app.delete('/api/team/:id', (req, res) => {
 			}
 		}
 	});
-}).delete('/api/teamMember/:id', (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
+}).delete('/api/teamMember/:id', verifyLogin, (req, res) => {
 	var sql = "DELETE FROM team_members WHERE id=$1::int and owner=$2::int";
 	var params = [req.params.id, req.session.userid];
 	pool.query(sql, params, (err, result) => {
