@@ -1,7 +1,7 @@
 <div class="row justify-content-center">
   <div class="col-3">
     <div class="list-group ml-3 mt-3 mb-3">
-    	<div class="list-group-item"><button ui-sref="modal.getTeamName" class="btn btn-success btn-lg btn-block">Create New Team</button></div>
+    	<div class="list-group-item list-group-item-success" ui-sref="teams.add">Create New Team</div>
 	    <div class="list-group-item d-flex justify-content-between align-items-center" ui-sref-active="active" ui-sref="teams.detail({id: {{team.id}}})" id="container_team{{team.id}}" ng-repeat="team in teams">
 	    	<span id="label_team{{team.id}}">{{team.team_name}}</span>
 	    	<input type="text" id="input_team{{team.id}}" value="{{team.team_name}}" style="display: none">
@@ -19,6 +19,4 @@
     	<div class="card-body" ui-view="details"></div>
 	</div>
   </div>
-
 </div>
-<div ui-view="modal" autoscroll="false"></div>

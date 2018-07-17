@@ -12,7 +12,9 @@ const async = require('async');
 // PG database name
 // PG password
 // It will not be provided in this repo.
-const sqlCreds = require('./sqlCredentials.js')
+const sqlCreds = require('./sqlCredentials.js');
+var natures = {};
+var typeMatchups = {};
 
 const pool = new Pool({
 	user: sqlCreds.user,
@@ -39,6 +41,13 @@ function verifyLogin(req, res, next) {
   } else {
     next()
   }
+}
+
+function getBaseStatsFromName(id, callback) {
+	var sql = 'SELECT base_hp, base_attack, base_defense, base_special_attack, base_special_defense, base_speed FROM pokemon WHERE name=$1::text';
+	var params = [id];
+
+	doQuery(sql, params, callback);
 }
 
 function getPokemonFromDex(id, callback) {
@@ -113,6 +122,27 @@ function isLoggedIn(request) {
 
 // Server Setup
 
+function calcHP(base, iv, ev, level) {
+	var stat = Math.floor(((2 * base + iv + Math.floor(ev/4)) * level)/100) + level + 10;
+	return stat;
+}
+
+function calcStat(base, iv, ev, level, nature, stat) {
+	if (natures[nature].boosted == natures[nature].weakened) {
+		var natureMult = 1;
+	} else if (natures[nature].boosted == stat) {
+		var natureMult = 1.1;
+	} else if (natures[nature].weakened == stat) {
+		var natureMult = 0.9;
+	} else {
+		var natureMult = 1;
+	}
+	var evStat = Math.floor(ev/4);
+	var innerStat = Math.floor(((2*base + iv + evStat) * level) / 100) + 5
+	var stat = Math.floor(innerStat * natureMult);
+	return stat;
+}
+
 var app = express();
 app.use(express.json())
    .use(bodyParser.urlencoded({ extended: true }))
@@ -133,9 +163,36 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 	getPCBox(req.session.userid, (err, result) => {
 		if (err) {
 			res.send(err);
+			return;
 		}
-		res.json(result);
-	})
+		async.forEachOf(result, (value, key, callback) => {
+					if (value != null) {
+					getBaseStatsFromName(value.pokemon, (err, result2) => {
+						if (err) {
+							return callback(err);
+						} else {
+							member = result[key];
+							result[key].calc_hp              = calcHP(result2[0].base_hp, member.hp_iv, member.hp_ev, member.level);
+							result[key].calc_attack          = calcStat(result2[0].base_attack, member.atk_iv, member.atk_ev, member.level, member.nature, "atk");
+							result[key].calc_defense         = calcStat(result2[0].base_defense, member.def_iv, member.def_ev, member.level, member.nature, "def");
+							result[key].calc_special_attack  = calcStat(result2[0].base_special_attack, member.spa_iv, member.spa_ev, member.level, member.nature, "spa");
+							result[key].calc_special_defense = calcStat(result2[0].base_special_defense, member.spd_iv, member.spd_ev, member.level, member.nature, "spd");
+							result[key].calc_speed           = calcStat(result2[0].base_speed, member.spe_iv, member.spe_ev, member.level, member.nature, "spe");
+							callback();
+						}
+					})
+					} else {
+						callback();
+					}
+				}, (err) => {
+					if (err) {
+						res.json(err);
+					} else {
+						res.json(result);
+					}
+				});
+
+		})
 }).get('/api/pc/raw', verifyLogin, (req, res) => {
 	getPCBoxAPI(req.session.userid, (err, result) => {
 		if (err) {
@@ -169,7 +226,38 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 			if (err) {
 				res.json(err);
 			} else {
-				res.json(team);
+				async.forEachOf(team.members, (value, key, callback) => {
+					if (value != null) {
+					getBaseStatsFromName(value.pokemon, (err, result) => {
+						if (err) {
+							return callback(err);
+						} else {
+							member = team.members[key];
+							team.members[key].base_hp              = result[0].base_hp;
+							team.members[key].base_attack          = result[0].base_attack;         
+							team.members[key].base_defense         = result[0].base_defense;  
+							team.members[key].base_special_attack  = result[0].base_special_attack; 
+							team.members[key].base_special_defense = result[0].base_special_defense; 
+							team.members[key].base_speed           = result[0].base_speed;
+							team.members[key].calc_hp              = calcHP(result[0].base_hp, member.hp_iv, member.hp_ev, member.level);
+							team.members[key].calc_attack          = calcStat(result[0].base_attack, member.atk_iv, member.atk_ev, member.level, member.nature, "atk");
+							team.members[key].calc_defense         = calcStat(result[0].base_defense, member.def_iv, member.def_ev, member.level, member.nature, "def");
+							team.members[key].calc_special_attack  = calcStat(result[0].base_special_attack, member.spa_iv, member.spa_ev, member.level, member.nature, "spa");
+							team.members[key].calc_special_defense = calcStat(result[0].base_special_defense, member.spd_iv, member.spd_ev, member.level, member.nature, "spd");
+							team.members[key].calc_speed           = calcStat(result[0].base_speed, member.spe_iv, member.spe_ev, member.level, member.nature, "spe");
+							callback();
+						}
+					})
+					} else {
+						callback();
+					}
+				}, (err) => {
+					if (err) {
+						res.json(err);
+					} else {
+						res.json(team);
+					}
+				})
 			}
 		});
 	})
@@ -264,13 +352,13 @@ app.post('/api/team/', verifyLogin, (req, res) => {
 		} else if (result.rows.length > 0) {
 			res.json({succeed: false, reason: "exists"});
 		} else {
-			var sql = "INSERT INTO teams(team_name, owner) VALUES ($1::text, $2::int)";
+			var sql = "INSERT INTO teams(team_name, owner) VALUES ($1::text, $2::int) RETURNING id";
 			var params = [teamName, req.session.userid];
 			pool.query(sql, params, (err, result) => {
 				if (err) {
-					res.json(err);
+					res.json({succeed: false, error: err});
 				} else {
-					res.json({succeed: true});
+					res.json({succeed: true, result: result});
 				}
 			})
 		}
@@ -334,6 +422,9 @@ app.post('/api/team/', verifyLogin, (req, res) => {
 });
 
 app.put('/api/team/:id', verifyLogin, (req, res) => {
+	console.log("Setting new data for team " + req.params.id + ": ");
+	console.log(req.body);
+	console.log(req.body.teamName);
 	var sql = "UPDATE teams SET ";
 	var valid = false;
 	var variableCounter = 1;
@@ -352,6 +443,7 @@ app.put('/api/team/:id', verifyLogin, (req, res) => {
 			sql += ", ";
 		}
 		sql += "team_name=$" + variableCounter++ + "::text "
+		valid = true;
 	}
 	sql += "WHERE id=$" + variableCounter++ +"::int AND owner=$"+ variableCounter++ +"::int";
 	if (valid) {
@@ -493,4 +585,10 @@ app.delete('/api/team/:id', verifyLogin, (req, res) => {
 	});
 })
 
-app.listen(PORT, () => console.log(`Listening on ${ PORT }`))
+doQuery("SELECT name, boosted, weakened FROM natures",[], (err, result) => {
+	for (let nature of result) {
+		natures[nature.name] = {boosted: nature.boosted, weakened: nature.weakened};
+	}
+});
+
+app.listen(PORT, () => console.log(`Listening on ${ PORT }\nSQL pool connection on port ${ process.env.SQLPORT || 5432 }`))

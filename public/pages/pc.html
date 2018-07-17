@@ -5,8 +5,7 @@
 			<th>Name</th>
 			<th>Ability<br>Nature<br>Held Item</th>
 			<th>Moves</th>
-			<th>IVs</th>
-			<th>EVs</th>
+			<th>Stats</th>
 		</tr>
 	</thead>
 	<tr ng-repeat="member in pc track by $index">
@@ -20,9 +19,10 @@
 			<span ng-if="member.move_4 != null"><br>{{member.move_4}}</span>
 		</td>
 		<td class="align-middle">
-			<table>
-				<thead class="thead-dark"><tr><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
+			<table class="rounded table-sm" ng-if="member.pokemon != null">
+				<thead class="thead-dark"><tr><th></th><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
 				<tr>
+					<th class="align-middle">IV</th>
 					<td class="align-middle">{{member.hp_iv}}</td>
 					<td class="align-middle">{{member.atk_iv}}</td>
 					<td class="align-middle">{{member.def_iv}}</td>
@@ -30,12 +30,8 @@
 					<td class="align-middle">{{member.spd_iv}}</td>
 					<td class="align-middle">{{member.spe_iv}}</td>
 				</tr>
-			</table>
-		</td>
-		<td class="align-middle">
-			<table>
-				<thead class="thead-dark"><tr><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
 				<tr>
+					<th class="align-middle">EV</th>
 					<td class="align-middle">{{member.hp_ev}}</td>
 					<td class="align-middle">{{member.atk_ev}}</td>
 					<td class="align-middle">{{member.def_ev}}</td>
@@ -43,6 +39,17 @@
 					<td class="align-middle">{{member.spd_ev}}</td>
 					<td class="align-middle">{{member.spe_ev}}</td>
 				</tr>
+				<thead class="thead-dark">
+					<tr>
+						<th class="align-middle">Stats</th>
+						<th class="align-middle">{{member.calc_hp}}</th>
+						<th class="align-middle">{{member.calc_attack}}</th>
+						<th class="align-middle">{{member.calc_defense}}</th>
+						<th class="align-middle">{{member.calc_special_attack}}</th>
+						<th class="align-middle">{{member.calc_special_defense}}</th>
+						<th class="align-middle">{{member.calc_speed}}</th>
+					</tr>
+				</thead>
 			</table>
 		</td>
 	</tr>
