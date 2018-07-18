@@ -1,4 +1,4 @@
-var app = angular.module('teambuilder', ['ngRoute', 'ui.router']);
+var app = angular.module('teambuilder', ['ngRoute', 'ui.router', 'ui.bootstrap']);
 
 function login() {
 	var username = document.getElementById("login").username.value;
@@ -128,6 +128,17 @@ app.controller('LoginController', function($scope) {
 	$scope.message = 'Hello from LoginController'
 });
 app.controller('TeamsController', function($scope, $http, $state) {
+	$scope.showForm = () => {
+		var modalInstance = $modal.open({
+			templateUrl: 'pages/modals/new_team.html',
+			controller:  tbd,
+			scope: $scope,
+			resolve: {
+				
+			}
+		})	
+	}
+
 	$http.get("/api/trainerTeams")
 	.then(function(response) {
 		if (response.data.succeed == false && response.data.reason == "not logged in") {
@@ -192,4 +203,7 @@ app.controller('TeamSummaryController', function($scope, $stateParams, $http) {
 });
 app.controller('TeamManagerController', function($scope, $stateParams, $http) {
 
-}) 
+});
+app.controller('TeamModalController', function($scope, $modal) {
+
+})
