@@ -67,7 +67,7 @@ function getFriendlyPokemonFromPC(id, owner, callback) {
 	doQuery(sql, params, callback);}
 function getPokemonFromPC(id, owner, callback) {
 	var sql = 'SELECT id, pokemon, nickname, level, ability, nature, held_item, move_1, move_2, move_3, move_4, hp_iv, atk_iv, def_iv, spa_iv, spd_iv, spe_iv, hp_ev, atk_ev, def_ev, spa_ev, spd_ev, spe_ev FROM team_members WHERE id=$1::int and owner=$2::int;';
-	var params = [id];
+	var params = [id, owner];
 
 	doQuery(sql, params, callback);}
 function getTeamFromDB(id, callback) {
@@ -186,7 +186,7 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 					}
 				}, (err) => {
 					if (err) {
-						res.json(err);
+						res.json({succeed: false, reason: {error: err}});
 					} else {
 						res.json(result);
 					}
@@ -206,6 +206,7 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 			res.send(err);
 		}
 		var team = {};
+		team.id = req.params.id;
 		team.team_name = result[0].team_name;
 		team.members = [ {slot: 1, id: result[0].member_1},
 						 {slot: 2, id: result[0].member_2},
@@ -224,7 +225,7 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 				});
 		}, (err) => {
 			if (err) {
-				res.json(err);
+				res.json({succeed: false, reason: {error: err}});
 			} else {
 				async.forEachOf(team.members, (value, key, callback) => {
 					if (value != null) {
@@ -253,7 +254,7 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 					}
 				}, (err) => {
 					if (err) {
-						res.json(err);
+						res.json({succeed: false, reason: {error: err}});
 					} else {
 						res.json(team);
 					}
@@ -311,8 +312,30 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 	getFriendlyPokemonFromPC(req.params.id, req.session.userid, function(err, result) {
 		if (err) {
 			res.send(err);
+		} else if (result === undefined || result.length == 0) {
+			res.json({succeed: false, reason: "does not exist"});
+		} else {
+		getBaseStatsFromName(result[0].pokemon, (err, result2) => {
+						if (err) {
+							res.send({succeed: false, reason: {error: err}});
+						} else {
+							var member = result[0];
+							result[0].base_hp              = result2[0].base_hp;
+							result[0].base_attack          = result2[0].base_attack;         
+							result[0].base_defense         = result2[0].base_defense;  
+							result[0].base_special_attack  = result2[0].base_special_attack; 
+							result[0].base_special_defense = result2[0].base_special_defense; 
+							result[0].base_speed           = result2[0].base_speed;
+							result[0].calc_hp              = calcHP(result2[0].base_hp, member.hp_iv, member.hp_ev, member.level);
+							result[0].calc_attack          = calcStat(result2[0].base_attack, member.atk_iv, member.atk_ev, member.level, member.nature, "atk");
+							result[0].calc_defense         = calcStat(result2[0].base_defense, member.def_iv, member.def_ev, member.level, member.nature, "def");
+							result[0].calc_special_attack  = calcStat(result2[0].base_special_attack, member.spa_iv, member.spa_ev, member.level, member.nature, "spa");
+							result[0].calc_special_defense = calcStat(result2[0].base_special_defense, member.spd_iv, member.spd_ev, member.level, member.nature, "spd");
+							result[0].calc_speed           = calcStat(result2[0].base_speed, member.spe_iv, member.spe_ev, member.level, member.nature, "spe");
+							res.json(result[0]);
+						}
+					})
 		}
-		res.json(result[0]);
 	})
 }).get('/api/teamMember/:id/raw', verifyLogin, (req, res) => {
 	getPokemonFromPC(req.params.id, req.session.userid, function(err, result) {
@@ -320,6 +343,20 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 			res.send(err);
 		}
 		res.json(result[0]);
+	})
+}).get('/api/teamMember/:id/isOnTeams', verifyLogin, (req, res) => {
+	var sql = "SELECT team_name FROM teams WHERE member_1=$1::int OR member_2=$1::int OR member_3=$1::int OR member_4=$1::int OR member_5=$1::int OR member_6=$1::int AND owner=$2::int";
+	var params = [req.params.id, req.session.userid];
+	pool.query(sql, params, (err, result) => {
+		if (err) {
+			res.json({succeed: true, error: err});
+		} else {
+			if (result.rows.length > 0) {
+				res.json({succeed: true, teams: result.rows});
+			} else {
+				res.json({succeed: false});
+			}
+		}
 	})
 }).get('/api/allowedMoves/:id', (req, res) => {
 	getAllowedMoves(req.params.id, (err, result) => {
@@ -335,6 +372,8 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 		}
 		res.json(result);
 	})
+}).get('/api/nature/:nature', (req, res) => {
+	res.json(natures[req.params.nature]);
 });
 
 // What can be modified:
@@ -344,11 +383,9 @@ app.post('/api/team/', verifyLogin, (req, res) => {
 	var teamName = req.body.teamName;
 	var sql = "SELECT team_name FROM teams WHERE team_name = $1::text and owner = $2::int";
 	var params = [teamName, parseInt(req.session.userid)];
-	console.log(req.body);
-	console.log(teamName);
 	pool.query(sql, params, (err, result) => {
 		if (err) {
-			res.json(err);
+			res.json({succeed: false, reason: {error: err}});
 		} else if (result.rows.length > 0) {
 			res.json({succeed: false, reason: "exists"});
 		} else {
@@ -364,10 +401,6 @@ app.post('/api/team/', verifyLogin, (req, res) => {
 		}
 	})
 }).post('/api/teamMember/', verifyLogin, (req, res) => {
-	if (!req.session.hasOwnProperty('userid')) {
-		res.json({succeed: false, reason: "not logged in"});
-		return;
-	}
 	var sql = "INSERT INTO team_members(pokemon,nickname,level,  owner,  ability,nature, held_item,move_1, move_2, move_3,  move_4,  hp_iv,   atk_iv,  def_iv,  spa_iv,  spd_iv,  spe_iv,  hp_ev,   atk_ev,  def_ev,  spa_ev,  spd_ev,  spe_ev)\n"
 	sql                     += "VALUES ($1::int,$2::text,$3::int,$4::int,$5::int,$6::int,$7::int,  $8::int,$9::int,$10::int,$11::int,$12::int,$13::int,$14::int,$15::int,$16::int,$17::int,$18::int,$19::int,$20::int,$21::int,$22::int,$23::int)";
 	var params = [parseInt(req.body.pokemon),
@@ -398,7 +431,7 @@ app.post('/api/team/', verifyLogin, (req, res) => {
 	} else {
 		pool.query(sql, params, (err, result) => {
 			if (err) {
-				res.json(err);
+				res.json({succeed: false, reason: {error: err}});
 			} else {
 				res.json({succeed: true});
 			}
@@ -422,9 +455,6 @@ app.post('/api/team/', verifyLogin, (req, res) => {
 });
 
 app.put('/api/team/:id', verifyLogin, (req, res) => {
-	console.log("Setting new data for team " + req.params.id + ": ");
-	console.log(req.body);
-	console.log(req.body.teamName);
 	var sql = "UPDATE teams SET ";
 	var valid = false;
 	var variableCounter = 1;
@@ -433,8 +463,11 @@ app.put('/api/team/:id', verifyLogin, (req, res) => {
 			if (i > 1 && valid) {
 				sql += ", ";
 			}
-			// TODO: prevent injection
-			sql += "member_" + i + "=$" + variableCounter++ + "::int ";
+			if (req.body["member_" + i] == null) {
+				sql += "member_" + i + "= null ";
+			} else {
+				sql += "member_" + i + "=(SELECT id from team_members where id=$" + variableCounter++ + "::int and owner=" + req.session.userid + ") ";
+			}
 			valid = true;
 		}
 	}
@@ -458,7 +491,7 @@ app.put('/api/team/:id', verifyLogin, (req, res) => {
 		          parseInt(req.session.userid)];
 		pool.query(sql, params, (err, result) => {
 			if (err) {
-				res.json(err);
+				res.json({succeed: false, reason: {error: err}});
 			} else {
 				if (result.rowCount == 0) {
 					res.json({succeed: false, reason: "team does not exist"});
@@ -541,7 +574,7 @@ app.put('/api/team/:id', verifyLogin, (req, res) => {
 		console.log(params);
 		pool.query(sql, params, (err, result) => {
 			if (err) {
-				res.json(err);
+				res.json({succeed: false, reason: {error: err}});
 			} else {
 				if (result.rowCount == 0) {
 					res.json({succeed: false, reason: "team member does not exist"});
@@ -560,7 +593,7 @@ app.delete('/api/team/:id', verifyLogin, (req, res) => {
 	var params = [req.params.id, req.session.userid];
 	pool.query(sql, params, (err, result) => {
 		if (err) {
-			res.json(err);
+			res.json({succeed: false, reason: {error: err}});
 		} else {
 			if (result.rowCount == 0) {
 				res.json({succeed: false, reason: "team does not exist"});
@@ -574,7 +607,11 @@ app.delete('/api/team/:id', verifyLogin, (req, res) => {
 	var params = [req.params.id, req.session.userid];
 	pool.query(sql, params, (err, result) => {
 		if (err) {
-			res.json(err);
+			if (err.code='23503') {
+				res.json({succeed: false, reason: "team member is still engaged"})
+			} else {
+				res.json({succeed: false, reason: {error: err}});
+			}
 		} else {
 			if (result.rowCount == 0) {
 				res.json({succeed: false, reason: "team member does not exist"});

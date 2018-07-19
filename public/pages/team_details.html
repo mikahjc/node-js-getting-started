@@ -9,7 +9,7 @@
       		<th></th>
 		</tr>
 	</thead>
-	<tr ng-repeat="member in team.members track by $index" id="member{{index}}">
+	<tr ng-repeat="member in team.members track by $index" id="member{{$index}}">
 		<td class="align-middle text-center"><img class="m-2" src="https://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{member.pokemon | lowercase}}.gif"><br>
 			<strong>{{member.pokemon}}</strong>
 			<span ng-if="member.nickname != null"><br>"{{member.nickname}}"</span>
@@ -56,10 +56,10 @@
 			</table>
 		</td>
 		<td class="align-middle align-center text-center d-flex flex-column justify-content-between align-items-center">
-			<button class="btn btn-success" ng-if="member.pokemon == null">Add</button>
+			<button class="btn btn-success" ng-if="member.pokemon == null" ui-sref="teamEdit.slot({id: team.id, slot: {{$index + 1}}})">Add</button>
 			<button class="btn btn-info m-1" ng-if="member.pokemon != null">Modify</button>
-			<button class="btn btn-warning m-1" ng-if="member.pokemon != null">Replace</button>
-			<button class="btn btn-danger m-1" ng-if="member.pokemon != null">Remove</button>
+			<button class="btn btn-warning m-1" ng-if="member.pokemon != null" ui-sref="teamEdit.slot({id: team.id, slot: {{$index + 1}}})">Replace</button>
+			<button class="btn btn-danger m-1" ng-if="member.pokemon != null" ng-click="removeTeamMember($index)">Remove</button>
 		</td>
 	</tr>
 </table>

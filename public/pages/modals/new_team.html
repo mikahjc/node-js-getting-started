@@ -1,14 +1,12 @@
 <div class="modal-header">
-  <h5 class="modal-title">New Team</h5>
-  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-    <span aria-hidden="true">&times;</span>
-  </button>
+    <h3 class="modal-title" id="modal-title">I'm a modal!</h3>
 </div>
-<div class="modal-body">
-  <p>Enter name of new team:</p>
-  <input class="form-control" type='text' size='30' id="newName">
+<div class="modal-body" id="modal-body">
+    <ul>
+        {{pc.data}}
+    </ul>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-primary">Create team</button>
-  <button type="button" class="btn btn-secondary">Cancel</button>
+    <button class="btn btn-primary" type="button" ng-click="pc.ok()">OK</button>
+    <button class="btn btn-warning" type="button" ng-click="pc.cancel()">Cancel</button>
 </div>

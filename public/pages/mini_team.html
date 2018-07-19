@@ -1,0 +1,11 @@
+<div class="card">
+	<div class="list-group list-group-flush">
+		<div class="list-group-item list-group-item-primary">Team Members</div>
+		<div class="list-group-item d-flex justify-content-between" ui-sref-active="active" ui-sref="teamEdit.slot({slot: '1'})">{{team.members[0].pokemon || "Empty"}}<span><strong>{{avg_hp}}</strong></span></div>
+		<div class="list-group-item d-flex justify-content-between" ui-sref-active="active" ui-sref="teamEdit.slot({slot: '2'})">{{team.members[1].pokemon || "Empty"}}<span><strong>{{avg_atk}}</strong></span></div>
+		<div class="list-group-item d-flex justify-content-between" ui-sref-active="active" ui-sref="teamEdit.slot({slot: '3'})">{{team.members[2].pokemon || "Empty"}}<span><strong>{{avg_def}}</strong></span></div>
+		<div class="list-group-item d-flex justify-content-between" ui-sref-active="active" ui-sref="teamEdit.slot({slot: '4'})">{{team.members[3].pokemon || "Empty"}}<span><strong>{{avg_spa}}</strong></span></div>
+		<div class="list-group-item d-flex justify-content-between" ui-sref-active="active" ui-sref="teamEdit.slot({slot: '5'})">{{team.members[4].pokemon || "Empty"}}<span><strong>{{avg_spd}}</strong></span></div>
+		<div class="list-group-item d-flex justify-content-between" ui-sref-active="active" ui-sref="teamEdit.slot({slot: '6'})">{{team.members[5].pokemon || "Empty"}}<span><strong>{{avg_spe}}</strong></span></div>
+	</div>
+</div>

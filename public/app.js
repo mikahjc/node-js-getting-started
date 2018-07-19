@@ -1,4 +1,4 @@
-var app = angular.module('teambuilder', ['ngRoute', 'ui.router', 'ui.bootstrap']);
+var app = angular.module('teambuilder', ['ngRoute', 'ngAnimate', 'ui.router', 'ui.bootstrap']);
 
 function login() {
 	var username = document.getElementById("login").username.value;
@@ -11,6 +11,35 @@ function login() {
 			savedResponse = response;
 		}
 	});
+}
+
+function nameNewTeam() {
+	$("#newTeamButton").hide();
+	$("#newTeamInfo").show();
+}
+
+function cancelNewTeam() {
+	$("#newTeamInfo").hide();
+	$("#newTeamButton").show();
+}
+
+function addTeamMember(team_id, slot, id) {
+	
+}
+
+function createNewTeam() {
+	var newTeamName = $("#newTeamName").val();
+	console.log(newTeamName);
+	$.post("/api/team", { teamName: newTeamName }, (data) => {
+		if (data.succeed) {
+			console.log(data.result);
+			var newTeamId = data.result.rows[0].id;
+			window.location.href = "/#!/teamEdit/" + newTeamId + "/slot/1";
+		} else {
+			alert("Team creation failed:\n" + data.error);
+			console.log(data);
+		}
+	})
 }
 
 function renameTeam(self) {
@@ -67,6 +96,7 @@ function deleteTeam(self) {
 	}
 }
 
+
 app.config(function($stateProvider, $urlRouterProvider) {
 	$urlRouterProvider.otherwise('/');
 
@@ -82,6 +112,16 @@ app.config(function($stateProvider, $urlRouterProvider) {
 		url: '/pc',
 		templateUrl : 'pages/pc.html',
 		controller  : 'PCController'
+	})
+
+	.state('pc.detail', {
+		url: '/:id',
+		views: {
+			"details" : {
+				templateUrl: 'pages/pc_detail.html',
+				controller: 'PCDetailController'
+			}
+		}
 	})
 
 	.state('modal', {
@@ -117,28 +157,41 @@ app.config(function($stateProvider, $urlRouterProvider) {
 		}
 	})
 
-	.state('teams.add', {
-		url: '/team/:id/slot/:num',
+	.state('teamEdit', {
+		url: '/teamEdit/:id',
 		templateUrl : 'pages/team_edit.html',
 		controller  : 'TeamManagerController'
 	})
+
+	.state('teamEdit.slot', {
+		url: '/slot/:slot',
+		views: {
+			"mini-team" : {
+				templateUrl: 'pages/mini_team.html'
+			},
+			"pc" : {
+				templateUrl: 'pages/pc.html',
+				controller : 'PCController'
+			}
+		}
+	})
+
+	.state('pokeDetail', {
+		url: '/teamMember/:id',
+		templateUrl: 'pages/poke_detail.html'
+	})
+
+	.state('pokeEdit', {
+		url: '/pokeEdit/:id',
+		templateUrl: 'pages/poke_edit.html'
+	}) 
 })
 
 app.controller('LoginController', function($scope) {
 	$scope.message = 'Hello from LoginController'
 });
-app.controller('TeamsController', function($scope, $http, $state) {
-	$scope.showForm = () => {
-		var modalInstance = $modal.open({
-			templateUrl: 'pages/modals/new_team.html',
-			controller:  tbd,
-			scope: $scope,
-			resolve: {
-				
-			}
-		})	
-	}
 
+app.controller('TeamsController', function($scope, $http, $state, $uibModal, $log) {
 	$http.get("/api/trainerTeams")
 	.then(function(response) {
 		if (response.data.succeed == false && response.data.reason == "not logged in") {
@@ -149,27 +202,192 @@ app.controller('TeamsController', function($scope, $http, $state) {
 		}
 	});
 });
-app.controller('PCController', function($scope, $http, $state) {
-   	$http.get("/api/pc")
-   	.then(function(response) {
-   		if (response.data.succeed == false && response.data.reason == "not logged in") {
-   			$state.transitionTo('login');
-   		} else {
-   			$scope.pc = response.data;
-   		}
-   	});
+app.controller('PCController', function($scope, $http, $state, $stateParams, $rootScope) {
+	$scope.addTeamMember = (id) => {
+		var data = {};
+		data['member_' + $stateParams.slot] = id;
+		$http.put("/api/team/" + $stateParams.id,
+		          data)
+		.then((response) => {
+			if (response.data.succeed) {
+				$scope.loadTeam();
+				//teamPCInterface.loadTeam($stateParams.id);
+			} else if (response.data.reason == "not logged in") {
+				$state.transitionTo('login');
+			} else {
+				alert("Unable to add to team:\n" + data.reason);
+			}
+		});
+	};
+
+	$scope.releaseTeamMember = (id) => {
+		var teamMember = $scope.pc.find((element) => {
+			return element.id == id;
+		})
+		if (teamMember == null) {
+			alert("What are you trying to do?! That's not your Pokemon!");
+			return;
+		}
+		var name = teamMember.nickname || teamMember.pokemon;
+		if (!confirm("Are you sure you want to release " + name + "?\nThis action cannot be undone.")) {
+			return;
+		}
+		$http.get("/api/teamMember/" + id + "/isOnTeams")
+		.then((response) => {
+			if (!response.data.succeed) {
+				$http.delete("/api/teamMember/" + id)
+				.then((response) => {
+					if (response.data.succeed) {
+						alert(name + " was released. Bye " + name + "!");
+						loadPC();
+					} else if (response.data.reason == "team member is still engaged") {
+						alert("This is embarrasing... we forgot to tell you that " + name + " is still on a team!\nRemove it from all of your teams first.");
+					} else {
+						alert("We couldn't release " + name + " for some reason... maybe it's too attached to you?");
+						console.log(response.data);
+					}
+				})
+			} else {
+				// Is on teams, can't release
+				var alertString = "You can't release " + name + "! Remove it from these teams first:\n";
+				for (let team in response.data.teams) {
+					alertString += team.team_name + "\n";
+				}
+				alert(alertString)
+			}
+		})
+	}
+
+	if ($stateParams.hasOwnProperty('slot')) {
+		$scope.slot = $stateParams.slot;
+	} else {
+		loadPC();
+	}
+	
+	function loadPC() {
+		$http.get("/api/pc")
+   		.then(function(response) {
+   			if (response.data.succeed == false && response.data.reason == "not logged in") {
+   				$state.transitionTo('login');
+   			} else {
+   				$scope.pc = response.data;
+   			}
+   		});
+	}
 });
-app.controller('TeamDetailsController', function($scope, $stateParams, $http, $state, $rootScope) {
-	$http.get("/api/team/" + $stateParams.id)
-	.then(function(response) {
-		if (response.data.succeed == false && response.data.reason == "not logged in") {
-			$state.transitionTo('login');		
+app.controller('PCDetailController', function($scope, $stateParams, $http) {
+	console.log("Spinning up details");
+	$http.get("/api/teamMember/" + $stateParams.id)
+	.then((response) => {
+		if (!response.data.hasOwnProperty('pokemon')) {
+			console.log(response);
+			console.log("error getting PC details");
 		} else {
-			console.log(response.data);
-			$rootScope.$broadcast('newTeam', response.data);
-			$scope.team = response.data;
+			$scope.detailedPokemon = response.data;
+			$http.get("/api/nature/" + response.data.nature)
+			.then((response) => {
+				if (response.data != null) {
+					$scope.nature = response.data;
+				} else {
+					console.log("error retrieving nature");
+				}
+			})
 		}
 	})
+
+	$http.get("/api/teamMember/" + $stateParams.id + "/raw")
+	.then((response) => {
+		if (!response.data.hasOwnProperty('pokemon')) {
+			console.log(response);
+			console.log("error getting PC raw details");
+		} else {
+			$http.get("/api/item/" + response.data.held_item)
+			.then((response) => {
+				if (response.data != null) {
+					$scope.item = response.data;
+				} else {
+					console.log("error retrieving item");
+				}
+			})
+			$http.get("/api/ability/" + response.data.ability)
+			.then((response) => {
+				if (response.data != null) {
+					$scope.ability = response.data;
+				} else {
+					console.log("error retrieving ability");
+				}
+			})
+			$http.get("/api/move/" + response.data.move_1)
+			.then((response) => {
+				if (response.data != null) {
+					$scope.move1 = response.data;
+				} else {
+					console.log("error retrieving move 1");
+				}
+			})
+			$http.get("/api/move/" + response.data.move_2)
+			.then((response) => {
+				if (response.data != null) {
+					$scope.move2 = response.data;
+				} else {
+					console.log("error retrieving move 2");
+				}
+			})
+			$http.get("/api/move/" + response.data.move_3)
+			.then((response) => {
+				if (response.data != null) {
+					$scope.move3 = response.data;
+				} else {
+					console.log("error retrieving move 3");
+				}
+			})
+			$http.get("/api/move/" + response.data.move_4)
+			.then((response) => {
+				if (response.data != null) {
+					$scope.move4 = response.data;
+				} else {
+					console.log("error retrieving move 4");
+				}
+			})
+		}
+	})
+})
+app.controller('TeamDetailsController', function($scope, $stateParams, $http, $state, $rootScope) {
+	$scope.removeTeamMember = (slot) => {
+		console.log(slot);
+		console.log($scope.team.members);
+		var name = $scope.team.members[slot].nickname || $scope.team.members[slot].pokemon;
+		if (confirm("Are you sure you want to remove " + name + " from " + $scope.team.team_name + "?")) {
+			var data = {};
+			data["member_" + (slot + 1)] = null;
+			console.log(data);
+			$http.put("/api/team/" + $stateParams.id, data)
+			.then((response) => {
+				console.log(response);
+				if (response.data.succeed) {
+					getTeam();
+				} else if (response.data.reason == "not logged in") {
+					$state.transitionTo('login');
+				} else {
+					alert("Unable to add to team:\n" + data.reason);
+				}
+			})
+		}
+	}
+
+	function getTeam() {
+		$http.get("/api/team/" + $stateParams.id)
+		.then(function(response) {
+			if (response.data.succeed == false && response.data.reason == "not logged in") {
+				$state.transitionTo('login');		
+			} else {
+				console.log(response.data);
+				$rootScope.$broadcast('newTeam', response.data);
+				$scope.team = response.data;
+			}
+		});
+	}
+	getTeam();
 });
 app.controller('TeamSummaryController', function($scope, $stateParams, $http) {
 	$scope.$on('newTeam', (event, msg) => {
@@ -201,9 +419,31 @@ app.controller('TeamSummaryController', function($scope, $stateParams, $http) {
 		$scope.avg_spe = Math.round(spe / members);
 	})
 });
-app.controller('TeamManagerController', function($scope, $stateParams, $http) {
+app.controller('TeamManagerController', function($scope, $stateParams, $http, $state) {
+	$scope.team = {};
+	$scope.pc = {};
 
+	$scope.loadTeam = () => {
+		console.log("loading team from parent");
+		$http.get("/api/team/" + $stateParams.id)
+	.then(function(response) {
+		if (response.data.succeed == false && response.data.reason == "not logged in") {
+			$state.transitionTo('login');
+			console.log(response.data);
+		} else {
+			$scope.team = response.data;
+		}
+	});
+	}
+
+	$http.get("/api/pc")
+   		.then(function(response) {
+   			if (response.data.succeed == false && response.data.reason == "not logged in") {
+   				$state.transitionTo('login');
+   			} else {
+   				$scope.pc = response.data;
+   			}
+   		});
+
+	$scope.loadTeam();
 });
-app.controller('TeamModalController', function($scope, $modal) {
-
-})

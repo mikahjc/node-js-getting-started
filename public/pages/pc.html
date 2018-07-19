@@ -1,56 +1,88 @@
-<table class="table table-striped table-hover">
-	<thead class="thead-dark">
-		<tr>
-			<th></th>
-			<th>Name</th>
-			<th>Ability<br>Nature<br>Held Item</th>
-			<th>Moves</th>
-			<th>Stats</th>
-		</tr>
-	</thead>
-	<tr ng-repeat="member in pc track by $index">
-		<td class="align-middle text-center"><img src="https://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{member.pokemon | lowercase}}.gif"></td>
-		<td class="align-middle">{{member.pokemon}}<span ng-if="member.nickname != null"><br>{{member.nickname}}</span></td>
-		<td class="align-middle">{{member.ability}}<br>{{member.nature}}<span ng-if="member.held_item != null"><br>{{member.held_item}}</span></td>
-		<td class="align-middle">
-			{{member.move_1}}
-			<span ng-if="member.move_2 != null"><br>{{member.move_2}}</span>
-			<span ng-if="member.move_3 != null"><br>{{member.move_3}}</span>
-			<span ng-if="member.move_4 != null"><br>{{member.move_4}}</span>
-		</td>
-		<td class="align-middle">
-			<table class="rounded table-sm" ng-if="member.pokemon != null">
-				<thead class="thead-dark"><tr><th></th><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
-				<tr>
-					<th class="align-middle">IV</th>
-					<td class="align-middle">{{member.hp_iv}}</td>
-					<td class="align-middle">{{member.atk_iv}}</td>
-					<td class="align-middle">{{member.def_iv}}</td>
-					<td class="align-middle">{{member.spa_iv}}</td>
-					<td class="align-middle">{{member.spd_iv}}</td>
-					<td class="align-middle">{{member.spe_iv}}</td>
-				</tr>
-				<tr>
-					<th class="align-middle">EV</th>
-					<td class="align-middle">{{member.hp_ev}}</td>
-					<td class="align-middle">{{member.atk_ev}}</td>
-					<td class="align-middle">{{member.def_ev}}</td>
-					<td class="align-middle">{{member.spa_ev}}</td>
-					<td class="align-middle">{{member.spd_ev}}</td>
-					<td class="align-middle">{{member.spe_ev}}</td>
-				</tr>
-				<thead class="thead-dark">
+<div class="row justify-content-center">
+	<div class="col-3" ui-view="details">
+		<div class="card m-3">
+			<img class="card-img-top" ng-img="https://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{detailedPokemon.pokemon | lowercase}}.gif">
+			<div class="card-body">
+				<div class="list-group list-group-flush">
+					<div class="list-group-item">No Pok&eacute;mon Selected</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-8">
+		<div class="card m-3">
+			<div class="card-body">
+				<table class="table table-striped table-hover">
+					<thead class="thead-dark">
+						<tr>
+							<th>Name</th>
+							<th>Ability<br>Nature<br>Held Item</th>
+							<th>Moves</th>
+							<th>Stats</th>
+							<th></th>
+						</tr>
+					</thead>
 					<tr>
-						<th class="align-middle">Stats</th>
-						<th class="align-middle">{{member.calc_hp}}</th>
-						<th class="align-middle">{{member.calc_attack}}</th>
-						<th class="align-middle">{{member.calc_defense}}</th>
-						<th class="align-middle">{{member.calc_special_attack}}</th>
-						<th class="align-middle">{{member.calc_special_defense}}</th>
-						<th class="align-middle">{{member.calc_speed}}</th>
+						<td colspan="5">
+							<button type="button" class="btn btn-success btn-lg btn-block">Add New Pok&eacute;mon</button>
+						</td>
 					</tr>
-				</thead>
-			</table>
-		</td>
-	</tr>
-</table>
+					<tr ng-repeat="member in pc track by $index" ui-sref="pc.detail({id: member.id})" ui-sref-active="table-primary">
+						<td class="align-middle text-center"><img class="m-2" src="https://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{member.pokemon | lowercase}}.gif"><br>
+							<strong>{{member.pokemon}}</strong>
+							<span ng-if="member.nickname != null"><br>"{{member.nickname}}"</span>
+						</td>
+						<td class="align-middle">{{member.ability}}<br>{{member.nature}}<span ng-if="member.held_item != null"><br>{{member.held_item}}</span></td>
+						<td class="align-middle">
+							{{member.move_1}}
+							<span ng-if="member.move_2 != null"><br>{{member.move_2}}</span>
+							<span ng-if="member.move_3 != null"><br>{{member.move_3}}</span>
+							<span ng-if="member.move_4 != null"><br>{{member.move_4}}</span>
+						</td>
+						<td class="align-middle">
+							<table class="rounded table-sm" ng-if="member.pokemon != null" style="margin: auto">
+								<thead class="thead-dark"><tr><th></th><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
+								<tr>
+									<th class="align-middle">IV</th>
+									<td class="align-middle">{{member.hp_iv}}</td>
+									<td class="align-middle">{{member.atk_iv}}</td>
+									<td class="align-middle">{{member.def_iv}}</td>
+									<td class="align-middle">{{member.spa_iv}}</td>
+									<td class="align-middle">{{member.spd_iv}}</td>
+									<td class="align-middle">{{member.spe_iv}}</td>
+								</tr>
+								<tr>
+									<th class="align-middle">EV</th>
+									<td class="align-middle">{{member.hp_ev}}</td>
+									<td class="align-middle">{{member.atk_ev}}</td>
+									<td class="align-middle">{{member.def_ev}}</td>
+									<td class="align-middle">{{member.spa_ev}}</td>
+									<td class="align-middle">{{member.spd_ev}}</td>
+									<td class="align-middle">{{member.spe_ev}}</td>
+								</tr>
+								<thead class="thead-dark">
+									<tr>
+										<th class="align-middle">Stats</th>
+										<th class="align-middle">{{member.calc_hp}}</th>
+										<th class="align-middle">{{member.calc_attack}}</th>
+										<th class="align-middle">{{member.calc_defense}}</th>
+										<th class="align-middle">{{member.calc_special_attack}}</th>
+										<th class="align-middle">{{member.calc_special_defense}}</th>
+										<th class="align-middle">{{member.calc_speed}}</th>
+									</tr>
+								</thead>
+							</table>
+						</td>
+						<td class="align-middle">
+							<button type="button" class="btn btn-info" ng-click="addTeamMember(member.id)"  ng-if="slot != null">Select</button>
+							<div class="d-flex text-center flex-column justify-content-between align-items-center" ng-if="slot == null">
+								<button type="button" class="btn btn-info m-2">Modify</button>
+								<button type="button" class="btn btn-warning m-2" ng-click="releaseTeamMember(member.id)">Release</button>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
