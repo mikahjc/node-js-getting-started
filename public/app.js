@@ -414,15 +414,23 @@ app.controller('PokeEditController', function($scope, $http, $state, $stateParam
 		};
 		if ($scope.selectedMove2 != null) {
 			data.move_2 = $scope.selectedMove2.id;
+		} else {
+			data.move_2 = null;
 		}
 		if ($scope.selectedMove3 != null) {
 			data.move_4 = $scope.selectedMove3.id;
+		} else {
+			data.move_3 = null;
 		}
 		if ($scope.selectedMove4 != null) {
 			data.move_4 = $scope.selectedMove4.id;
+		} else {
+			data.move_4 = null;
 		}
 		if ($scope.selectedItem != null) {
 			data.held_item = $scope.selectedItem.id;
+		} else {
+			data.move_4 = null;
 		}
 		console.log(data);
 		$http.put("/api/teamMember/" + $stateParams.id, data)

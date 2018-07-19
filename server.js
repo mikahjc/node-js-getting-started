@@ -547,70 +547,71 @@ app.put('/api/team/:id', verifyLogin, (req, res) => {
 	}
 }).put('/api/teamMember/:id', verifyLogin, (req, res) => {
 	var sql = "UPDATE team_members SET ";
-	var valid = false;
+	var valid = true;
 	var variableCounter = 1;
 
-	function appendSql(property, type) {
-		if (req.body.hasOwnProperty(property)) {
-			if (valid) {
-				sql += ", ";
-			} else {
-				valid = true;
-			}
-			sql += property + "=$" + variableCounter++ + "::" + type + " ";
-		}
-	}
+	// function appendSql(property, type) {
+	// 	if (req.body.hasOwnProperty(property)) {
+	// 		if (valid) {
+	// 			sql += ", ";
+	// 		} else {
+	// 			valid = true;
+	// 		}
+	// 		sql += property + "=$" + variableCounter++ + "::" + type + " ";
+	// 	}
+	// }
 
-	appendSql('nickname', 'text')
-	appendSql('level', 'int');
-	appendSql('ability', 'int');
-	appendSql('nature', 'int');
-	appendSql('held_item', 'int');
-	for (var i = 1; i <= 4; i++) {
-		if (req.body.hasOwnProperty('move_' + i)) {
-			if (i > 1 || valid) {
-				sql += ", ";
-			}
-			sql += "move_" + i + "=$" + variableCounter++ + "::int ";
-			valid = true;
-		}
-	}
-	appendSql( 'hp_iv','int');
-	appendSql('atk_iv','int');
-	appendSql('def_iv','int');
-	appendSql('spa_iv','int');
-	appendSql('spd_iv','int');
-	appendSql('spe_iv','int');
-	appendSql( 'hp_ev','int');
-	appendSql('atk_ev','int');
-	appendSql('def_ev','int');
-	appendSql('spa_ev','int');
-	appendSql('spd_ev','int');
-	appendSql('spe_ev','int');
-	sql += "WHERE id=$" + variableCounter++ +"::int AND owner=$"+ variableCounter++ +"::int";
+	// appendSql('nickname', 'text')
+	// appendSql('level', 'int');
+	// appendSql('ability', 'int');
+	// appendSql('nature', 'int');
+	// appendSql('held_item', 'int');
+	// for (var i = 1; i <= 4; i++) {
+	// 	if (req.body.hasOwnProperty('move_' + i)) {
+	// 		if (i > 1 || valid) {
+	// 			sql += ", ";
+	// 		}
+	// 		sql += "move_" + i + "=$" + variableCounter++ + "::int ";
+	// 		valid = true;
+	// 	}
+	// }
+	// appendSql( 'hp_iv','int');
+	// appendSql('atk_iv','int');
+	// appendSql('def_iv','int');
+	// appendSql('spa_iv','int');
+	// appendSql('spd_iv','int');
+	// appendSql('spe_iv','int');
+	// appendSql( 'hp_ev','int');
+	// appendSql('atk_ev','int');
+	// appendSql('def_ev','int');
+	// appendSql('spa_ev','int');
+	// appendSql('spd_ev','int');
+	// appendSql('spe_ev','int');
+	sql = "UPDATE team_members SET nickname=$1, level=$2::int, ability=$3::int, nature=$4::int, held_item=$5::int, move_1=$6::int, move_2=$7::int, move_3=$8::int, move_4=$9::int, hp_iv=$10::int,atk_iv=$11::int,def_iv=$12::int,spa_iv=$13::int,spd_iv=$14::int,spe_iv=$15::int,hp_ev=$16::int,atk_ev=$17::int,def_ev=$18::int,spa_ev=$19::int,spd_ev=$20::int,spe_ev=$21::int\n";
+	sql += "WHERE id=$22::int AND owner=$23::int";
 	if (valid) {
 		console.log(sql);
-		params = [...(req.body.nickname ? [req.body.nickname] : []),
-				  ...(req.body.level ? [parseInt(req.body.level)] : []),
-				  ...(req.body.ability ? [parseInt(req.body.ability)] : []),
-				  ...(req.body.nature ? [parseInt(req.body.nature)] : []),
-				  ...(req.body.held_item ? [parseInt(req.body.held_item)] : []),
-				  ...(req.body.move_1 ? [parseInt(req.body.move_1)] : []),
-				  ...(req.body.move_2 ? [parseInt(req.body.move_2)] : []),
-				  ...(req.body.move_3 ? [parseInt(req.body.move_3)] : []),
-				  ...(req.body.move_4 ? [parseInt(req.body.move_4)] : []),
-				  ...(req.body.hp_iv || req.body.hp_iv == 0 ? [parseInt(req.body.hp_iv)] : []),
-				  ...(req.body.atk_iv || req.body.atk_iv == 0 ? [parseInt(req.body.atk_iv)] : []),
-				  ...(req.body.def_iv || req.body.def_iv == 0 ? [parseInt(req.body.def_iv)] : []),
-				  ...(req.body.spa_iv || req.body.spa_iv == 0 ? [parseInt(req.body.spa_iv)] : []),
-				  ...(req.body.spd_iv || req.body.spd_iv == 0 ? [parseInt(req.body.spd_iv)] : []),
-				  ...(req.body.spe_iv || req.body.spe_iv == 0 ? [parseInt(req.body.spe_iv)] : []),
-				  ...(req.body.hp_ev || req.body.hp_ev == 0 ? [parseInt(req.body.hp_ev)] : []),
-				  ...(req.body.atk_ev || req.body.atk_ev == 0 ? [parseInt(req.body.atk_ev)] : []),
-				  ...(req.body.def_ev || req.body.def_ev == 0 ? [parseInt(req.body.def_ev)] : []),
-				  ...(req.body.spa_ev || req.body.spa_ev == 0 ? [parseInt(req.body.spa_ev)] : []),
-				  ...(req.body.spd_ev || req.body.spd_ev == 0 ? [parseInt(req.body.spd_ev)] : []),
-				  ...(req.body.spe_ev || req.body.spe_ev == 0 ? [parseInt(req.body.spe_ev)] : []),
+		params = [...(req.body.nickname ? [req.body.nickname] : null),
+				  ...(req.body.level ? [parseInt(req.body.level)] : null),
+				  ...(req.body.ability ? [parseInt(req.body.ability)] : null),
+				  ...(req.body.nature ? [parseInt(req.body.nature)] : null),
+				  ...(req.body.held_item ? [parseInt(req.body.held_item)] : null),
+				  ...(req.body.move_1 ? [parseInt(req.body.move_1)] : null),
+				  ...(req.body.move_2 ? [parseInt(req.body.move_2)] : null),
+				  ...(req.body.move_3 ? [parseInt(req.body.move_3)] : null),
+				  ...(req.body.move_4 ? [parseInt(req.body.move_4)] : null),
+				  ...(req.body.hp_iv || req.body.hp_iv == 0 ? [parseInt(req.body.hp_iv)] : null),
+				  ...(req.body.atk_iv || req.body.atk_iv == 0 ? [parseInt(req.body.atk_iv)] : null),
+				  ...(req.body.def_iv || req.body.def_iv == 0 ? [parseInt(req.body.def_iv)] : null),
+				  ...(req.body.spa_iv || req.body.spa_iv == 0 ? [parseInt(req.body.spa_iv)] : null),
+				  ...(req.body.spd_iv || req.body.spd_iv == 0 ? [parseInt(req.body.spd_iv)] : null),
+				  ...(req.body.spe_iv || req.body.spe_iv == 0 ? [parseInt(req.body.spe_iv)] : null),
+				  ...(req.body.hp_ev || req.body.hp_ev == 0 ? [parseInt(req.body.hp_ev)] : null),
+				  ...(req.body.atk_ev || req.body.atk_ev == 0 ? [parseInt(req.body.atk_ev)] : null),
+				  ...(req.body.def_ev || req.body.def_ev == 0 ? [parseInt(req.body.def_ev)] : null),
+				  ...(req.body.spa_ev || req.body.spa_ev == 0 ? [parseInt(req.body.spa_ev)] : null),
+				  ...(req.body.spd_ev || req.body.spd_ev == 0 ? [parseInt(req.body.spd_ev)] : null),
+				  ...(req.body.spe_ev || req.body.spe_ev == 0 ? [parseInt(req.body.spe_ev)] : null),
 				  parseInt(req.params.id),
 				  parseInt(req.session.userid)];
 		console.log(params);
