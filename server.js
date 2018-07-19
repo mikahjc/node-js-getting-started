@@ -76,12 +76,12 @@ function getTeamFromDB(id, callback) {
 
 	doQuery(sql, params, callback);}
 function getAllowedMoves(pokemonId, callback) {
-	var sql = 'SELECT move, how_learned, learned_at FROM allowed_moves WHERE pokemon=$1::int';
+	var sql = 'SELECT am.move as id, m.name as name, t.name as type, m.category, m.power, m.accuracy, m.pp, m.description, am.how_learned, am.learned_at FROM allowed_moves am LEFT JOIN moves m ON am.move = m.id LEFT JOIN types t ON m.type = t.id WHERE pokemon=$1::int';
 	var params = [pokemonId];
 
 	doQuery(sql, params, callback);}
 function getAllowedAbilities(pokemonId, callback) {
-	var sql = 'SELECT ability, hidden FROM allowed_abilities WHERE pokemon=$1::int';
+	var sql = 'SELECT ab.ability as id, a.name, ab.hidden, a.description FROM allowed_abilities ab LEFT JOIN abilities a ON ab.ability = a.id WHERE pokemon=$1::int';
 	var params = [pokemonId];
 
 	doQuery(sql, params, callback);}
@@ -115,6 +115,20 @@ function getTeams(owner, callback) {
 	var params = [owner];
 
 	doQuery(sql, params, callback);}
+
+function getAllItems(callback) {
+	var sql = 'SELECT id, name, description FROM items';
+	var params = [];
+
+	doQuery(sql, params, callback);
+}
+
+function getPokedex(callback) {
+	var sql = 'SELECT p.id, p.name, t1.name as type1, t2.name as type2, previous, base_hp, base_attack, base_defense, base_special_attack, base_special_defense, base_speed, gen FROM pokemon p LEFT JOIN types t1 ON p.type1 = t1.id LEFT JOIN types t2 ON p.type2 = t2.id ORDER BY p.id';
+	var params = [];
+
+	doQuery(sql, params, callback);
+}
 
 function isLoggedIn(request) {
   return request.session.hasOwnProperty('userid');
@@ -270,12 +284,23 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 		res.json(result[0]);
 	})
 }).get('/api/item/:id', (req, res) => {
-	getItem(req.params.id, (err, result) => {
-		if (err) {
-			res.send(err);
-		}
-		res.json(result[0]);
-	})
+	if (req.params.id == "all") {
+		getAllItems((err, result) => {
+			if (err) {
+				res.json({succeed: false, reason: {error: err}});
+			} else {
+				res.json({succeed: true, data: result})
+			}
+		})
+	} else {
+		getItem(req.params.id, (err, result) => {
+			if (err) {
+				res.send(err);
+			} else {
+				res.json(result[0]);
+			}
+		})
+	}
 }).get('/api/ability/:id', (req, res) => {
 	getAbility(req.params.id, (err, result) => {
 		if (err) {
@@ -284,16 +309,25 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 		res.json(result[0]);
 	})
 }).get('/api/pokemon/:id', (req, res) => {
-	getPokemonFromDex(req.params.id, (err, result) => {
-		if (err) {
-			res.send(err);
-		}
-		if (result.length > 0) {
-			res.json(result[0]);
-		} else {
-			res.send("No data");
-		}
-	})
+	if (req.params.id == "all") {
+		getPokedex((err, result) => {
+			if (err) {
+				res.json({succeed: false, reason: {error: err}});
+			} else {
+				res.json({succeed: true, data: result});
+			}
+		})
+	} else {
+		getPokemonFromDex(req.params.id, (err, result) => {
+			if (err) {
+				res.send(err);
+			}
+			if (result.length > 0) {
+				res.json(result[0]);
+			} else {
+				res.send("No data");
+			}
+		})}
 }).get('/api/pokemon/:id/raw', (req, res) => {
 	getPokemonFromDexAPI(req.params.id, (err, result) => {
 		if (err) {
@@ -373,7 +407,15 @@ app.get('/api/pc/', verifyLogin, (req, res) => {
 		res.json(result);
 	})
 }).get('/api/nature/:nature', (req, res) => {
-	res.json(natures[req.params.nature]);
+	if (req.params.nature == "all") {
+		res.json({succeed: true, data: natures});
+	} else {
+		if (natures.hasOwnProperty(req.params.nature)) {
+			res.json(natures[req.params.nature]);
+		} else {
+			res.json({succeed: false, reason: "nature does not exist"});
+		}
+	}
 });
 
 // What can be modified:
@@ -433,7 +475,7 @@ app.post('/api/team/', verifyLogin, (req, res) => {
 			if (err) {
 				res.json({succeed: false, reason: {error: err}});
 			} else {
-				res.json({succeed: true});
+				res.json({succeed: true, data: result});
 			}
 		})
 	}
@@ -526,7 +568,7 @@ app.put('/api/team/:id', verifyLogin, (req, res) => {
 	appendSql('held_item', 'int');
 	for (var i = 1; i <= 4; i++) {
 		if (req.body.hasOwnProperty('move_' + i)) {
-			if (i > 1 && valid) {
+			if (i > 1 || valid) {
 				sql += ", ";
 			}
 			sql += "move_" + i + "=$" + variableCounter++ + "::int ";
@@ -557,24 +599,24 @@ app.put('/api/team/:id', verifyLogin, (req, res) => {
 				  ...(req.body.move_2 ? [parseInt(req.body.move_2)] : []),
 				  ...(req.body.move_3 ? [parseInt(req.body.move_3)] : []),
 				  ...(req.body.move_4 ? [parseInt(req.body.move_4)] : []),
-				  ...(req.body.hp_iv ? [parseInt(req.body.hp_iv)] : []),
-				  ...(req.body.atk_iv ? [parseInt(req.body.atk_iv)] : []),
-				  ...(req.body.def_iv ? [parseInt(req.body.def_iv)] : []),
-				  ...(req.body.spa_iv ? [parseInt(req.body.spa_iv)] : []),
-				  ...(req.body.spd_iv ? [parseInt(req.body.spd_iv)] : []),
-				  ...(req.body.spe_iv ? [parseInt(req.body.spe_iv)] : []),
-				  ...(req.body.hp_ev ? [parseInt(req.body.hp_ev)] : []),
-				  ...(req.body.atk_ev ? [parseInt(req.body.atk_ev)] : []),
-				  ...(req.body.def_ev ? [parseInt(req.body.def_ev)] : []),
-				  ...(req.body.spa_ev ? [parseInt(req.body.spa_ev)] : []),
-				  ...(req.body.spd_ev ? [parseInt(req.body.spd_ev)] : []),
-				  ...(req.body.spe_ev ? [parseInt(req.body.spe_ev)] : []),
+				  ...(req.body.hp_iv || req.body.hp_iv == 0 ? [parseInt(req.body.hp_iv)] : []),
+				  ...(req.body.atk_iv || req.body.atk_iv == 0 ? [parseInt(req.body.atk_iv)] : []),
+				  ...(req.body.def_iv || req.body.def_iv == 0 ? [parseInt(req.body.def_iv)] : []),
+				  ...(req.body.spa_iv || req.body.spa_iv == 0 ? [parseInt(req.body.spa_iv)] : []),
+				  ...(req.body.spd_iv || req.body.spd_iv == 0 ? [parseInt(req.body.spd_iv)] : []),
+				  ...(req.body.spe_iv || req.body.spe_iv == 0 ? [parseInt(req.body.spe_iv)] : []),
+				  ...(req.body.hp_ev || req.body.hp_ev == 0 ? [parseInt(req.body.hp_ev)] : []),
+				  ...(req.body.atk_ev || req.body.atk_ev == 0 ? [parseInt(req.body.atk_ev)] : []),
+				  ...(req.body.def_ev || req.body.def_ev == 0 ? [parseInt(req.body.def_ev)] : []),
+				  ...(req.body.spa_ev || req.body.spa_ev == 0 ? [parseInt(req.body.spa_ev)] : []),
+				  ...(req.body.spd_ev || req.body.spd_ev == 0 ? [parseInt(req.body.spd_ev)] : []),
+				  ...(req.body.spe_ev || req.body.spe_ev == 0 ? [parseInt(req.body.spe_ev)] : []),
 				  parseInt(req.params.id),
 				  parseInt(req.session.userid)];
 		console.log(params);
 		pool.query(sql, params, (err, result) => {
 			if (err) {
-				res.json({succeed: false, reason: {error: err}});
+				res.json({succeed: false, reason: {error: err, query: sql, parameters: params}});
 			} else {
 				if (result.rowCount == 0) {
 					res.json({succeed: false, reason: "team member does not exist"});
@@ -622,9 +664,9 @@ app.delete('/api/team/:id', verifyLogin, (req, res) => {
 	});
 })
 
-doQuery("SELECT name, boosted, weakened FROM natures",[], (err, result) => {
+doQuery("SELECT name, boosted, weakened, id FROM natures",[], (err, result) => {
 	for (let nature of result) {
-		natures[nature.name] = {boosted: nature.boosted, weakened: nature.weakened};
+		natures[nature.name] = {boosted: nature.boosted, weakened: nature.weakened, id: nature.id, name: nature.name};
 	}
 });
 

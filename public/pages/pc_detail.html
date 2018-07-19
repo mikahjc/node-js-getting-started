@@ -28,9 +28,9 @@
 		</div>
 		<div class="list-group-item list-group-item-light d-flex justify-content-between">
 			Held Item:
-			<span><strong>{{detailedPokemon.held_item}}</strong></span>
+			<span><strong>{{detailedPokemon.held_item || "None"}}</strong></span>
 		</div>
-		<div class="list-group-item">
+		<div class="list-group-item" ng-if="detailedPokemon.held_item != null">
 			{{item.description}}
 		</div>
 
@@ -59,7 +59,7 @@
 					PP:
 					<span><strong>{{move1.pp}}</strong></span>
 				</div>
-				<p><strong>{{move1.description}}</strong></p>
+				<div><strong>{{move1.description}}</strong></div>
 			</div>
 			<div class="list-group-item" ng-if="move2 != null">
 				<div class="d-flex justify-content-between">
@@ -78,7 +78,7 @@
 					PP:
 					<span><strong>{{move2.pp}}</strong></span>
 				</div>
-				<p><strong>{{move2.description}}</strong></p>
+				<div><strong>{{move2.description}}</strong></div>
 			</div>
 			<div class="list-group-item" ng-if="move3 != null">
 				<div class="d-flex justify-content-between">
@@ -97,7 +97,7 @@
 					PP:
 					<span><strong>{{move3.pp}}</strong></span>
 				</div>
-				<p><strong>{{move3.description}}</strong></p>
+				<div><strong>{{move3.description}}</strong></div>
 			</div>
 			<div class="list-group-item" ng-if="move4 != null">
 				<div class="d-flex justify-content-between">
@@ -116,7 +116,7 @@
 					PP:
 					<span><strong>{{move4.pp}}</strong></span>
 				</div>
-				<p><strong>{{move4.description}}</strong></p>
+				<div><strong>{{move4.description}}</strong></div>
 			</div>
 		</div>
 

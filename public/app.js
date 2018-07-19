@@ -1,4 +1,4 @@
-var app = angular.module('teambuilder', ['ngRoute', 'ngAnimate', 'ui.router', 'ui.bootstrap']);
+var app = angular.module('teambuilder', ['ngRoute', 'ngAnimate', 'ui.router', 'angular.filter']);
 
 function login() {
 	var username = document.getElementById("login").username.value;
@@ -183,7 +183,8 @@ app.config(function($stateProvider, $urlRouterProvider) {
 
 	.state('pokeEdit', {
 		url: '/pokeEdit/:id',
-		templateUrl: 'pages/poke_edit.html'
+		templateUrl: 'pages/poke_edit.html',
+		controller: 'PokeEditController'
 	}) 
 })
 
@@ -191,12 +192,295 @@ app.controller('LoginController', function($scope) {
 	$scope.message = 'Hello from LoginController'
 });
 
-app.controller('TeamsController', function($scope, $http, $state, $uibModal, $log) {
+app.controller('PokeEditController', function($scope, $http, $state, $stateParams) {
+	$scope.hp_iv  = 0;
+	$scope.atk_iv = 0;
+	$scope.def_iv = 0;
+	$scope.spa_iv = 0;
+	$scope.spd_iv = 0;
+	$scope.spe_iv = 0;
+	$scope.hp_ev  = 0;
+	$scope.atk_ev = 0;
+	$scope.def_ev = 0;
+	$scope.spa_ev = 0;
+	$scope.spd_ev = 0;
+	$scope.spe_ev = 0;
+	var movesReady = false;
+	var itemsReady = false;
+	var naturesReady = false;
+	var abilitiesReady = false;
+
+	$scope.$watch('pokedex', function() {
+		if ($scope.pokedex[0].hasOwnProperty('id')) {
+		console.log("pokedex loaded");
+		if ($stateParams.id == null || $stateParams.id == "new") {
+		$scope.newPokemon = true;
+	} else {
+		$http.get("/api/teamMember/" + $stateParams.id + "/raw")
+		.then((response) => {
+			if (response.data.hasOwnProperty('pokemon')) {
+				var member = response.data;
+				$scope.member = member;
+				$scope.pokemon = $scope.pokedex.find(function(element) {
+					return element.id == member.pokemon;
+				});
+				if (member.nickname != null) {
+					$scope.nickname = member.nickname;
+				}
+				$scope.level = member.level;
+				$scope.hp_iv  = member.hp_iv ;
+				$scope.atk_iv = member.atk_iv;
+				$scope.def_iv = member.def_iv;
+				$scope.spa_iv = member.spa_iv;
+				$scope.spd_iv = member.spd_iv;
+				$scope.spe_iv = member.spe_iv;
+				$scope.hp_ev  = member.hp_ev ;
+				$scope.atk_ev = member.atk_ev;
+				$scope.def_ev = member.def_ev;
+				$scope.spa_ev = member.spa_ev;
+				$scope.spd_ev = member.spd_ev;
+				$scope.spe_ev = member.spe_ev;
+				if (movesReady) {
+					$scope.selectedMove1 = $scope.allowedMoves.find(function(element) {
+						return element.id == member.move_1;
+					})
+					$scope.selectedMove2 = $scope.allowedMoves.find(function(element) {
+						return element.id == member.move_2;
+					})
+					$scope.selectedMove3 = $scope.allowedMoves.find(function(element) {
+						return element.id == member.move_3;
+					})
+					$scope.selectedMove4 = $scope.allowedMoves.find(function(element) {
+						return element.id == member.move_4;
+					})
+				}
+				if (itemsReady) {
+					$scope.selectedItem = $scope.items.find(function(element) {
+						return element.id == member.held_item;
+					})
+				}
+				if (naturesReady) {
+					$scope.selectedNature = Object.values($scope.items).find(function(element) {
+						return element.id == member.nature;
+					})
+				}
+				if (abilitiesReady) {
+					$scope.selectedAbility = $scope.allowedAbilities.find(function(element) {
+						return element.id == member.ability;
+					})
+				}
+			} else {
+				console.log("error retrieving team member");
+			}
+		})
+	}}
+	})
+
+	$http.get("/api/item/all")
+	.then(function(response) {
+		if (response.data.succeed) {
+			$scope.items = response.data.data;
+			itemsReady = true;
+			if ($scope.member != null && $scope.selectedItem == null) {
+				$scope.selectedItem = $scope.items.find(function(element) {
+						return element.id == $scope.member.held_item;
+					})
+			}
+		} else {
+			console.log("error getting items");
+		}
+	})
+
+	$http.get("/api/nature/all")
+	.then(function(response) {
+		if (response.data.succeed) {
+			$scope.natures = response.data.data;
+			naturesReady = true;
+			if ($scope.member != null && $scope.selectedNature == null) {
+				$scope.selectedNature = Object.values($scope.items).find(function(element) {
+						return element.id == member.nature;
+				})
+			}
+		} else {
+			console.log("error getting natures");
+		}
+	})
+
+	$http.get("/api/pokemon/all")
+	.then(function(response) {
+		if (response.data.succeed) {
+			$scope.pokedex = response.data.data;
+		} else {
+			console.log("error getting pokedex");
+		}
+	})
+
+	$scope.$watch('pokemon', function () {
+		$scope.getPokemon($scope.pokemon.id);
+	})
+	$scope.$watch('selectedMove1', function() {
+		if ($scope.selectedMove1 == null) {
+			$scope.selectedMove2 = null;
+			$scope.selectedMove3 = null;
+			$scope.selectedMove4 = null;
+		}
+	})
+	$scope.$watch('selectedMove2', function() {
+		if ($scope.selectedMove2 == null) {
+			$scope.selectedMove3 = null;
+			$scope.selectedMove4 = null;
+		}
+	})
+	$scope.$watch('selectedMove3', function() {
+		if ($scope.selectedMove3 == null) {
+			$scope.selectedMove4 = null;
+		}
+	})
+
+	$scope.savePokemon = () => {
+		if ($scope.newPokemon) {
+			createNewPokemon();
+		} else {
+			saveExistingPokemon();
+		}
+	}
+
+	var createNewPokemon = () => {
+		console.log("saving new pokemon");
+		var data = {
+			pokemon: $scope.pokemon.id,
+			nickname: $scope.nickname,
+			level: $scope.level,
+			ability: $scope.selectedAbility.id,
+			nature: $scope.selectedNature.id,
+			held_item: $scope.selectedItem.id || null,
+			move_1: $scope.selectedMove1.id,
+			hp_iv:  $scope.hp_iv,
+			atk_iv: $scope.atk_iv,
+			def_iv: $scope.def_iv,
+			spa_iv: $scope.spa_iv,
+			spd_iv: $scope.spd_iv,
+			spe_iv: $scope.spe_iv,
+			hp_ev: $scope.hp_ev,
+			atk_ev: $scope.atk_ev,
+			def_ev: $scope.def_ev,
+			spa_ev: $scope.spa_ev,
+			spd_ev: $scope.spd_ev,
+			spe_ev: $scope.spe_ev
+		};
+		if ($scope.selectedMove2 != null) {
+			data.move_2 = $scope.selectedMove2.id;
+		}
+		if ($scope.selectedMove3 != null) {
+			data.move_4 = $scope.selectedMove3.id;
+		}
+		if ($scope.selectedMove4 != null) {
+			data.move_4 = $scope.selectedMove4.id;
+		}
+		console.log(data);
+		$http.post("/api/teamMember", data)
+		.then((response) => {
+			if (response.data.succeed) {
+				alert("Pokemon Saved");
+				console.log(response.data);
+			} else {
+				alert("Unable to save Pokemon");
+				console.log(response.data);
+			}
+		})
+	}
+
+	var saveExistingPokemon = () => {
+		console.log("saving existing pokemon");
+		var data = {
+			pokemon: $scope.pokemon.id,
+			nickname: $scope.nickname,
+			level: $scope.level,
+			ability: $scope.selectedAbility.id,
+			nature: $scope.selectedNature.id,
+			move_1: $scope.selectedMove1.id,
+			hp_iv:  $scope.hp_iv,
+			atk_iv: $scope.atk_iv,
+			def_iv: $scope.def_iv,
+			spa_iv: $scope.spa_iv,
+			spd_iv: $scope.spd_iv,
+			spe_iv: $scope.spe_iv,
+			hp_ev: $scope.hp_ev,
+			atk_ev: $scope.atk_ev,
+			def_ev: $scope.def_ev,
+			spa_ev: $scope.spa_ev,
+			spd_ev: $scope.spd_ev,
+			spe_ev: $scope.spe_ev
+		};
+		if ($scope.selectedMove2 != null) {
+			data.move_2 = $scope.selectedMove2.id;
+		}
+		if ($scope.selectedMove3 != null) {
+			data.move_4 = $scope.selectedMove3.id;
+		}
+		if ($scope.selectedMove4 != null) {
+			data.move_4 = $scope.selectedMove4.id;
+		}
+		if ($scope.selectedItem != null) {
+			data.held_item = $scope.selectedItem.id;
+		}
+		console.log(data);
+		$http.put("/api/teamMember/" + $stateParams.id, data)
+		.then((response) => {
+			if (response.data.succeed) {
+				alert("Pokemon Saved");
+				console.log(response.data);
+			} else {
+				alert("Unable to save Pokemon");
+				console.log(response.data);
+			}
+		})
+	}
+
+	$scope.getPokemon = (id) => {
+		$http.get("/api/allowedMoves/" + id)
+		.then(function(response) {
+			if (response.data.length > 0) {
+				$scope.allowedMoves = response.data;
+				movesReady = true;
+				if ($scope.member != null && $scope.selectedMove1 == null) {
+					$scope.selectedMove1 = $scope.allowedMoves.find(function(element) {
+						return element.id == $scope.member.move_1;
+					})
+					$scope.selectedMove2 = $scope.allowedMoves.find(function(element) {
+						return element.id == $scope.member.move_2;
+					})
+					$scope.selectedMove3 = $scope.allowedMoves.find(function(element) {
+						return element.id == $scope.member.move_3;
+					})
+					$scope.selectedMove4 = $scope.allowedMoves.find(function(element) {
+						return element.id == $scope.member.move_4;
+					})
+				}
+			} else {
+				console.log("error getting allowed moves");
+			}
+		})
+		$http.get("/api/allowedAbilities/" + id)
+		.then(function(response) {
+			if (response.data.length > 0) {
+				$scope.allowedAbilities = response.data;
+				abilitiesReady = true;
+				if ($scope.member != null && $scope.selectedAbility == null) {
+					$scope.selectedAbility = $scope.allowedAbilities.find(function(element) {
+						return element.id == $scope.member.ability;
+					})
+				}
+			}
+		})
+	}
+})
+
+app.controller('TeamsController', function($scope, $http, $state, $log) {
 	$http.get("/api/trainerTeams")
 	.then(function(response) {
 		if (response.data.succeed == false && response.data.reason == "not logged in") {
 			$state.transitionTo('login');
-			console.log(response.data);
 		} else {
 			$scope.teams = response.data;
 		}
@@ -301,14 +585,18 @@ app.controller('PCDetailController', function($scope, $stateParams, $http) {
 			console.log(response);
 			console.log("error getting PC raw details");
 		} else {
-			$http.get("/api/item/" + response.data.held_item)
-			.then((response) => {
-				if (response.data != null) {
-					$scope.item = response.data;
-				} else {
-					console.log("error retrieving item");
-				}
-			})
+			if (response.data.held_item != null) {
+				$http.get("/api/item/" + response.data.held_item)
+				.then((response) => {
+					if (response.data != null) {
+						$scope.item = response.data;
+					} else {
+						console.log("error retrieving item");
+					}
+				})
+			} else {
+				$scope.item = null;
+			}
 			$http.get("/api/ability/" + response.data.ability)
 			.then((response) => {
 				if (response.data != null) {
@@ -325,30 +613,42 @@ app.controller('PCDetailController', function($scope, $stateParams, $http) {
 					console.log("error retrieving move 1");
 				}
 			})
-			$http.get("/api/move/" + response.data.move_2)
-			.then((response) => {
-				if (response.data != null) {
-					$scope.move2 = response.data;
-				} else {
-					console.log("error retrieving move 2");
-				}
-			})
-			$http.get("/api/move/" + response.data.move_3)
-			.then((response) => {
-				if (response.data != null) {
-					$scope.move3 = response.data;
-				} else {
-					console.log("error retrieving move 3");
-				}
-			})
-			$http.get("/api/move/" + response.data.move_4)
-			.then((response) => {
-				if (response.data != null) {
-					$scope.move4 = response.data;
-				} else {
-					console.log("error retrieving move 4");
-				}
-			})
+			if (response.data.move_2 != null) {
+				$http.get("/api/move/" + response.data.move_2)
+				.then((response) => {
+					if (response.data != null) {
+						$scope.move2 = response.data;
+					} else {
+						console.log("error retrieving move 2");
+					}
+				})
+			} else {
+				$scope.move2 = null;
+			}
+			if (response.data.move_3 != null) {
+				$http.get("/api/move/" + response.data.move_3)
+				.then((response) => {
+					if (response.data != null) {
+						$scope.move3 = response.data;
+					} else {
+						console.log("error retrieving move 3");
+					}
+				})
+			} else {
+				$scope.move3 = null;
+			}
+			if (response.data.move_4 != null) {
+				$http.get("/api/move/" + response.data.move_4)
+				.then((response) => {
+					if (response.data != null) {
+						$scope.move4 = response.data;
+					} else {
+						console.log("error retrieving move 4");
+					}
+				})
+			} else {
+				$scope.move4 = null;
+			}
 		}
 	})
 })

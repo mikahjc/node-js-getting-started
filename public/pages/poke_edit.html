@@ -1,0 +1,166 @@
+<div class="row justify-content-center">
+	<div class="col-10">
+		<div class="card m-3">
+			<div class="card-body">
+				<table class="table table-sm">
+					<thead class="thead-dark">
+						<th>Species/Nickname<br>Level</th>
+						<th>Ability<br>Nature<br>Held Item</th>
+						<th>Moves</th>
+						<th>Stats</th>
+					</thead>
+					<tr>
+						<td class="text-center d-flex flex-column align-middle align-items-center" style="max-width: 300px">
+							<img class="mt-3" src="https://cs313.mikahchapman.com/assets/img/sprites/pkmn/{{pokemon.name | lowercase}}.gif">
+							<select style="max-width: 200px" class="form-control mt-3 ml-3 mr-3" ng-options="pokemon as pokemon.name for pokemon in pokedex track by pokemon.id" ng-model="pokemon">
+								<option value="">Select Breed</option>
+							</select>
+							<input style="max-width: 200px" class="form-control m-3" name="nickname" size="16" placeholder="Nickname (optional)" ng-model="nickname">
+							<input style="max-width: 200px" type="number" class="form-control ml-3 mr-3 mb-3" min="1" max="100" value="50" ng-model="level">
+						</td>
+						<td class="align-middle" style="max-width: 300px">
+							<select style="max-width: 200px" class="form-control ml-3 mr-3" ng-options="ability as ability.name for ability in allowedAbilities track by ability.id" ng-model="selectedAbility">
+								<option value="">Select Ability</option>
+							</select>
+							<select style="max-width: 200px" class="form-control mt-3 ml-3 mr-3" ng-options="nature as nature.name for nature in natures track by nature.id" ng-model="selectedNature">
+								<option value="">Select Nature</option>
+							</select>
+							<select style="max-width: 200px" class="form-control mt-3 ml-3 mr-3" ng-options="item as item.name for item in items track by item.id" ng-model="selectedItem">
+								<option value="">Select Item (optional)</option>
+							</select>
+						</td>
+						<td class="align-middle">
+							<select class="form-control ml-3 mr-3" ng-options="move as move.name for move in allowedMoves track by move.id" ng-model="selectedMove1" value="{{null}}">
+								<option value="">Select Move</option>
+							</select>
+							<select class="form-control mt-1 ml-3 mr-3" ng-options="move as move.name for move in allowedMoves track by move.id" ng-model="selectedMove2" ng-show="selectedMove1 != null" value="{{null}}">
+								<option value="">Select Move</option>
+							</select>
+							<select class="form-control mt-1 ml-3 mr-3" ng-options="move as move.name for move in allowedMoves track by move.id" ng-model="selectedMove3" ng-show="selectedMove2 != null" value="{{null}}">
+								<option value="">Select Move</option>
+							</select>
+							<select class="form-control mt-1 ml-3 mr-3" ng-options="move as move.name for move in allowedMoves track by move.id" ng-model="selectedMove4"
+							ng-show="selectedMove3 != null" value="{{null}}">
+								<option value="">Select Move</option>
+							</select>
+						</td>
+						<td class="align-middle">
+							<table class="rounded table-sm" style="margin: auto">
+								<thead class="thead-dark"><tr><th></th><th>HP</th><th>Atk</th><th>Def</th><th>SpA</th><th>SpD</th><th>Spe</th></tr></thead>
+								<tr class="align-middle">
+									<th class="align-middle">IV</th>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="31" ng-model="hp_iv" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="31" ng-model="atk_iv" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="31" ng-model="def_iv" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="31" ng-model="spa_iv" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="31" ng-model="spd_iv" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="31" ng-model="spe_iv" value="0"></td>
+								</tr>
+								<tr class="align-middle">
+									<th>EV</th>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="255" ng-model="hp_ev" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="255" ng-model="atk_ev" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="255" ng-model="def_ev" ng-value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="255" ng-model="spa_ev" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="255" ng-model="spd_ev" value="0"></td>
+									<td><input style="width:5em" class="form-control input-sm" type="number" min="0" max="255" ng-model="spe_ev" value="0"></td>
+								</tr>
+								<thead class="thead-dark">
+									<tr class="align-middle">
+										<th class="align-middle">Stats</th>
+										<th class="align-middle">{{calc_hp}}</th>
+										<th class="align-middle">{{calc_attack}}</th>
+										<th class="align-middle">{{calc_defense}}</th>
+										<th class="align-middle">{{calc_special_attack}}</th>
+										<th class="align-middle">{{calc_special_defense}}</th>
+										<th class="align-middle">{{calc_speed}}</th>
+									</tr>
+								</thead>
+							</table>
+						</td>
+					</tr>
+					<tr>
+						<td style="max-width: 300px">
+							<div class="card m-3">
+								<div class="card-title m-3">
+									<strong>Ability: {{selectedAbility.name || ""}}</strong>
+								</div>		
+								<div class="card-text m-3">
+									{{selectedAbility.description || ""}}
+								</div>
+							</div>
+						</td>
+						<td style="max-width: 300px">
+							<div class="card m-3">
+								<div class="card-title m-3">
+									<strong>Item: {{selectedItem.name || ""}}</strong>
+								</div>		
+								<div class="card-text m-3">
+									{{selectedItem.description || ""}}
+								</div>
+							</div>
+						</td>
+						<td colspan="2">
+							<div class="card m-3">
+								<div class="card-body p-0">
+							<table class="table table-sm mb-0">
+								<thead class="thead-dark">
+									<tr>
+										<th>Move</th>
+										<th>Type</th>
+										<th>Category</th>
+										<th>Power</th>
+										<th>PP</th>
+										<th>Description</th>
+									</tr>
+								</thead>
+								<tr ng-show="selectedMove1 != null">
+									<td>{{selectedMove1.name}}</td>
+									<td>{{selectedMove1.type}}</td>
+									<td>{{selectedMove1.category}}</td>
+									<td>{{selectedMove1.power}}</td>
+									<td>{{selectedMove1.pp}}</td>
+									<td>{{selectedMove1.description}}</td>
+								</tr>
+								<tr ng-show="selectedMove2 != null">
+									<td>{{selectedMove2.name}}</td>
+									<td>{{selectedMove2.type}}</td>
+									<td>{{selectedMove2.category}}</td>
+									<td>{{selectedMove2.power}}</td>
+									<td>{{selectedMove2.pp}}</td>
+									<td>{{selectedMove2.description}}</td>
+								</tr>
+								<tr ng-show="selectedMove3 != null">
+									<td>{{selectedMove3.name}}</td>
+									<td>{{selectedMove3.type}}</td>
+									<td>{{selectedMove3.category}}</td>
+									<td>{{selectedMove3.power}}</td>
+									<td>{{selectedMove3.pp}}</td>
+									<td>{{selectedMove3.description}}</td>
+								</tr>
+								<tr ng-show="selectedMove4 != null">
+									<td>{{selectedMove4.name}}</td>
+									<td>{{selectedMove4.type}}</td>
+									<td>{{selectedMove4.category}}</td>
+									<td>{{selectedMove4.power}}</td>
+									<td>{{selectedMove4.pp}}</td>
+									<td>{{selectedMove4.description}}</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="4">
+							<div class="d-flex flex-row-reverse">
+								<button type="button" class="btn btn-success m-3"  ng-click="savePokemon()">Save</button>
+								<button type="button" class="btn btn-secondary m-3">Cancel</button>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>

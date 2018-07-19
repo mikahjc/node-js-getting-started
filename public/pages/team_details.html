@@ -57,7 +57,7 @@
 		</td>
 		<td class="align-middle align-center text-center d-flex flex-column justify-content-between align-items-center">
 			<button class="btn btn-success" ng-if="member.pokemon == null" ui-sref="teamEdit.slot({id: team.id, slot: {{$index + 1}}})">Add</button>
-			<button class="btn btn-info m-1" ng-if="member.pokemon != null">Modify</button>
+			<button class="btn btn-info m-1" ng-if="member.pokemon != null" ui-sref="pokeEdit({id: member.id})">Modify</button>
 			<button class="btn btn-warning m-1" ng-if="member.pokemon != null" ui-sref="teamEdit.slot({id: team.id, slot: {{$index + 1}}})">Replace</button>
 			<button class="btn btn-danger m-1" ng-if="member.pokemon != null" ng-click="removeTeamMember($index)">Remove</button>
 		</td>

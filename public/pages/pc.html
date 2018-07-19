@@ -24,7 +24,7 @@
 					</thead>
 					<tr>
 						<td colspan="5">
-							<button type="button" class="btn btn-success btn-lg btn-block">Add New Pok&eacute;mon</button>
+							<button type="button" class="btn btn-success btn-lg btn-block" ui-sref="pokeEdit({id: 'new'})">Add New Pok&eacute;mon</button>
 						</td>
 					</tr>
 					<tr ng-repeat="member in pc track by $index" ui-sref="pc.detail({id: member.id})" ui-sref-active="table-primary">
@@ -76,8 +76,8 @@
 						<td class="align-middle">
 							<button type="button" class="btn btn-info" ng-click="addTeamMember(member.id)"  ng-if="slot != null">Select</button>
 							<div class="d-flex text-center flex-column justify-content-between align-items-center" ng-if="slot == null">
-								<button type="button" class="btn btn-info m-2">Modify</button>
-								<button type="button" class="btn btn-warning m-2" ng-click="releaseTeamMember(member.id)">Release</button>
+								<button type="button" class="btn btn-info m-2" ui-sref="pokeEdit({id: member.id})" ng-click="$event.stopPropagation()">Modify</button>
+								<button type="button" class="btn btn-warning m-2" ng-click="$event.stopPropagation(); releaseTeamMember(member.id)">Release</button>
 							</div>
 						</td>
 					</tr>
