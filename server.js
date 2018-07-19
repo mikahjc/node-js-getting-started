@@ -587,7 +587,7 @@ app.put('/api/team/:id', verifyLogin, (req, res) => {
 	// appendSql('spa_ev','int');
 	// appendSql('spd_ev','int');
 	// appendSql('spe_ev','int');
-	sql = "UPDATE team_members SET nickname=$1, level=$2::int, ability=$3::int, nature=$4::int, held_item=$5::int, move_1=$6::int, move_2=$7::int, move_3=$8::int, move_4=$9::int, hp_iv=$10::int,atk_iv=$11::int,def_iv=$12::int,spa_iv=$13::int,spd_iv=$14::int,spe_iv=$15::int,hp_ev=$16::int,atk_ev=$17::int,def_ev=$18::int,spa_ev=$19::int,spd_ev=$20::int,spe_ev=$21::int\n";
+	sql = "UPDATE team_members SET nickname=$1, level=$2::int, ability=$3::int, nature=$4, held_item=$5::int, move_1=$6::int, move_2=$7::int, move_3=$8, move_4=$9, hp_iv=$10::int,atk_iv=$11::int,def_iv=$12::int,spa_iv=$13::int,spd_iv=$14::int,spe_iv=$15::int,hp_ev=$16::int,atk_ev=$17::int,def_ev=$18::int,spa_ev=$19::int,spd_ev=$20::int,spe_ev=$21::int\n";
 	sql += "WHERE id=$22::int AND owner=$23::int";
 	if (valid) {
 		console.log(sql);

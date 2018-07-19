@@ -418,7 +418,7 @@ app.controller('PokeEditController', function($scope, $http, $state, $stateParam
 			data.move_2 = null;
 		}
 		if ($scope.selectedMove3 != null) {
-			data.move_4 = $scope.selectedMove3.id;
+			data.move_3 = $scope.selectedMove3.id;
 		} else {
 			data.move_3 = null;
 		}
@@ -430,7 +430,7 @@ app.controller('PokeEditController', function($scope, $http, $state, $stateParam
 		if ($scope.selectedItem != null) {
 			data.held_item = $scope.selectedItem.id;
 		} else {
-			data.move_4 = null;
+			data.held_item = null;
 		}
 		console.log(data);
 		$http.put("/api/teamMember/" + $stateParams.id, data)
